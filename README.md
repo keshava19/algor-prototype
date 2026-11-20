@@ -66,7 +66,8 @@ The scenario clock advances one scenario minute per real second (1 Hz). All disp
 come from the scenario clock. See [`docs/demo-script.md`](docs/demo-script.md) for the
 60-second and 3-minute scripts, and
 [`docs/demo-script-layperson.md`](docs/demo-script-layperson.md) for a ~5-minute walkthrough
-aimed at viewers new to cold-chain logistics.
+aimed at viewers new to cold-chain logistics. To record the 60-second cut on an emulator, follow
+[`docs/video-recording-plan.md`](docs/video-recording-plan.md).
 
 ## Structure
 
@@ -77,7 +78,8 @@ lib/core/theme        dark navy/cyan theme
 lib/features          role picker, driver flow, excursion overlay, ops monitor, client view, PDF
 lib/shared/widgets    provider-free presentation widgets (DemoTray and CallSheet excepted)
 lib/routing           go_router shell
-docs/                 decisions registry, architecture contract, demo scripts, implementation notes
+tools/video           emulator take script, caption track, ffmpeg render
+docs/                 decisions registry, architecture contract, demo scripts, implementation notes, video recording plan
 test/                 temperature, state-machine, driver-flow and PDF smoke tests
 ```
 
