@@ -47,10 +47,10 @@ Queue promotions: one item one step per tick while online.
 
 ## Temperature math
 
-`temperatureAt(tick, driftFrom, acknowledgedAt, excursionPin)`:
-base 4.2 + seeded noise (seed 42, ±0.3) → while drifting add 0.35 × (tick − driftFrom) →
-while an unacknowledged excursion exists the reading pins at 8.9 → after ack decay
-−0.8 × (tick − ackTick) toward 4.5, then noise only.
+`temperatureAt(tick, driftFrom, acknowledgedAt, pinFromTick)`: base 4.2 + seeded noise
+(seed 42, ±0.3) → while drifting add 0.35 × (tick − driftFrom) → from the excursion start
+onward the reading pins at 8.9 → after ack decay −0.8 × (tick − ackTick) toward 4.5, then
+noise only.
 `meanKineticTemperature(series)`: Arrhenius, Ea 83.144 kJ/mol, R 8.314462618.
 
 ## Providers

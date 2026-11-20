@@ -89,5 +89,5 @@ implementation contract. Code carries no explanatory comments by design.
   OpenStreetMap tiles; the map falls back to a route grid when tiles are unavailable.
 - Photos are bundled concept artwork and scan/call actions are simulated.
 - Language stays at "audit-trail-backed" and "supports GDP documentation"; the build does not
-  claim regulatory compliance or tamper-proofing.
+  claim regulatory compliance or tamper resistance.
 - The concept footer appears on every screen and every PDF page.
