@@ -64,7 +64,9 @@ Long-press the concept footer on any screen to open the demo tray:
 
 The scenario clock advances one scenario minute per real second (1 Hz). All displayed times
 come from the scenario clock. See [`docs/demo-script.md`](docs/demo-script.md) for the
-60-second and 3-minute scripts.
+60-second and 3-minute scripts, and
+[`docs/demo-script-layperson.md`](docs/demo-script-layperson.md) for a ~5-minute walkthrough
+aimed at viewers new to cold-chain logistics.
 
 ## Structure
 
@@ -75,8 +77,8 @@ lib/core/theme        dark navy/cyan theme
 lib/features          role picker, driver flow, excursion overlay, ops monitor, client view, PDF
 lib/shared/widgets    provider-free presentation widgets (DemoTray and CallSheet excepted)
 lib/routing           go_router shell
-docs/                 decisions registry, architecture contract, demo script
-test/                 temperature, state-machine and driver-flow smoke tests
+docs/                 decisions registry, architecture contract, demo scripts, implementation notes
+test/                 temperature, state-machine, driver-flow and PDF smoke tests
 ```
 
 `docs/decisions.md` is the append-only rationale registry; `docs/architecture.md` is the
