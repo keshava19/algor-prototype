@@ -58,15 +58,15 @@ Companion files: [`../tools/video/beats.ass`](../tools/video/beats.ass) (caption
 | 23.6 | **Close** (enabled after the 2 s ring; 0.8 s margin) | 8 |
 | 24.8 | **Log action** | 9 |
 | 26.0 | **Save acknowledgement** (Compressor reset is pre-selected) | 9 |
-| 27.8 | Offline switch **off**; the queue drains, last sync about 33.8 | 10 |
+| 27.8 | Offline switch **off**; the queue drains, last sync about 33.2 | 10 |
 | 29.0–29.4 | Two signature strokes (400 ms each) | 10 → 11 |
 | 29.8 | **Done** — sticky footer, no scroll | 11 |
-| 29.8–35.8 | Hold; the footer counts 1→3 of 3 synced, the e-POD fires about 34.0, and the screen advances itself about 34.3 | 12 |
-| 35.8 | **View client view** | 12 → 13 |
-| 37.3 | Open the top shipment card | 13 |
-| 38.7, 40.1, 41.5, 42.9 | Four slow scrolls (over-scroll is harmless) | 13 |
-| 44.3 | **Download audit PDF** in the app bar (pinned while scrolled) | 14 |
-| 44.8–60.0 | Hold; spinner then share sheet about 46–47 | 14 → 15 |
+| 29.8–38.0 | Hold; the footer counts 1→3 of 3 synced, the e-POD fires about 33.2, and the screen advances itself about 33.3 | 12 |
+| 38.0 | **View client view** | 12 → 13 |
+| 39.5 | Open the top shipment card | 13 |
+| 40.9, 42.3, 43.7, 45.1 | Four slow scrolls (over-scroll is harmless) | 13 |
+| 46.5 | **Download audit PDF** in the app bar (pinned while scrolled) | 14 |
+| 47.0–60.0 | Hold; spinner then share sheet about 48–49 | 14 → 15 |
 | 60.0 | Recording finalizes at the time limit; pull and clean up | 15 ends |
 
 ## Captions
@@ -84,10 +84,10 @@ Companion files: [`../tools/video/beats.ass`](../tools/video/beats.ass) (caption
 | 9 | 24.6 → 26.6 | Log the fix — who, when, what was done. |
 | 10 | 27.8 → 29.8 | Back in signal — the captures sync one by one. |
 | 11 | 29.9 → 33.4 | The receiver signs on the device. |
-| 12 | 33.6 → 35.8 | No "delivered" button — the e-POD closes itself. |
-| 13 | 36.3 → 44.0 | The client sees everything the driver captured. |
-| 14 | 44.4 → 48.0 | One tap — the full audit PDF. |
-| 15 | 48.5 → 59.95 | One Flutter codebase, built on your tracking data. |
+| 12 | 33.6 → 37.9 | No "delivered" button — the e-POD closes itself. |
+| 13 | 38.1 → 44.9 | The client sees everything the driver captured. |
+| 14 | 45.2 → 48.8 | One tap — the full audit PDF. |
+| 15 | 49.2 → 59.95 | One Flutter codebase, built on your tracking data. |
 
 Style: white Roboto 56 with a 3 px navy `#0A2540` outline and a soft shadow, bottom-centred
 with `MarginV 380` so captions clear the button row and the concept footer. The outline variant
@@ -122,13 +122,17 @@ After each take, extract these raw frames and read them:
 | Raw 19.0 s | Excursion overlay at 8.9 °C with the push banner still visible |
 | Raw 26.5 s | Signature step, overlay gone |
 | Raw 29.9 s | Signature drawn; Done in the sticky footer, no scroll |
-| Raw 34.5 s | Confirm step with "e-POD generated" and three synced event IDs |
-| Raw 44.8 s | Share sheet with `algor-field-audit-172-45678901.pdf` |
+| Raw 34.5 s | Confirm step with "e-POD generated" and three synced event IDs (the frame is held until the client list at ~38 s) |
+| Raw 38.0 s | Client list, "Latest shipment · Delivered" |
+| Raw 47.4 s | Share sheet with `algor-field-audit-172-45678901.pdf` |
 | Rendered 50 s | Held share sheet, caption above the footer |
 | Rendered 58 s | Closing caption above the footer |
 
 Any failure: fix the named constant or sleep in `take.sh`, re-run the dry run, then retake.
-After rendering, check a caption frame (about 50 s) clears the button row and footer.
+After rendering, check a caption frame (about 50 s) clears the button row and footer. The
+screenrecord encoder writes no frames while the screen is static, so a player holds the last
+frame across those gaps; when sampling with ffmpeg, pick a timestamp at or just before the
+previous transition (for example 33.3 s for the confirm step) rather than the middle of a hold.
 
 ## Fallbacks
 

@@ -158,13 +158,13 @@ run_take() {
   at 29.0; swipe "$SIGN1_X1" "$SIGN1_Y1" "$SIGN1_X2" "$SIGN1_Y2" "$SIGN_MS"
   at 29.4; swipe "$SIGN2_X1" "$SIGN2_Y1" "$SIGN2_X2" "$SIGN2_Y2" "$SIGN_MS"
   at 29.8; tap "$DONE_X" "$DONE_Y"
-  at 35.8; tap "$VIEW_CLIENT_X" "$VIEW_CLIENT_Y"
-  at 37.3; tap "$CLIENT_CARD_X" "$CLIENT_CARD_Y"
-  at 38.7; swipe "$SCROLL_X" "$SCROLL_FROM_Y" "$SCROLL_X" "$SCROLL_TO_Y" "$SCROLL_MS"
-  at 40.1; swipe "$SCROLL_X" "$SCROLL_FROM_Y" "$SCROLL_X" "$SCROLL_TO_Y" "$SCROLL_MS"
-  at 41.5; swipe "$SCROLL_X" "$SCROLL_FROM_Y" "$SCROLL_X" "$SCROLL_TO_Y" "$SCROLL_MS"
-  at 42.9; swipe "$SCROLL_X" "$SCROLL_FROM_Y" "$SCROLL_X" "$SCROLL_TO_Y" "$SCROLL_MS"
-  at 44.3; tap "$PDF_X" "$PDF_Y"
+  at 38.0; tap "$VIEW_CLIENT_X" "$VIEW_CLIENT_Y"
+  at 39.5; tap "$CLIENT_CARD_X" "$CLIENT_CARD_Y"
+  at 40.9; swipe "$SCROLL_X" "$SCROLL_FROM_Y" "$SCROLL_X" "$SCROLL_TO_Y" "$SCROLL_MS"
+  at 42.3; swipe "$SCROLL_X" "$SCROLL_FROM_Y" "$SCROLL_X" "$SCROLL_TO_Y" "$SCROLL_MS"
+  at 43.7; swipe "$SCROLL_X" "$SCROLL_FROM_Y" "$SCROLL_X" "$SCROLL_TO_Y" "$SCROLL_MS"
+  at 45.1; swipe "$SCROLL_X" "$SCROLL_FROM_Y" "$SCROLL_X" "$SCROLL_TO_Y" "$SCROLL_MS"
+  at 46.5; tap "$PDF_X" "$PDF_Y"
 
   if [ "$record" = "1" ]; then
     at 60.0
