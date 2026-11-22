@@ -35,6 +35,13 @@ const callControlRoomLabel = 'Call control room';
 const smsControlRoomLabel = 'SMS control room';
 const smsSentLabel = 'SMS sent · GSM fallback';
 const downloadAuditPdfLabel = 'Download audit PDF';
+const pdfPreparingLabel = 'Preparing PDF…';
+const pdfFailedLabel = 'Could not prepare the PDF — try again.';
+const finalRecordTitle = 'Final record';
+const custodySourceDriver = 'Driver app';
+const custodySourceSensor = 'Sensor feed';
+const custodySourceControlRoom = 'Control room';
+const custodySourceSystem = 'System';
 const sealVerifiedLabel = 'Seal verified';
 const deliveredLabel = 'Delivered';
 const deliveryNoteLabel = 'Delivery note (optional)';
@@ -78,35 +85,56 @@ const canonicalCustody = <CustodyEvent>[
     title: 'Dispatched',
     tick: 0,
     detail: 'Mumbai (BOM)',
+    source: custodySourceSystem,
   ),
   CustodyEvent(
     eventId: 'EVT-002',
     title: 'Pre-trip checklist confirmed',
     tick: 8,
+    source: custodySourceDriver,
+    actor: driverName,
   ),
-  CustodyEvent(eventId: 'EVT-003', title: 'AWB scanned', tick: 10),
+  CustodyEvent(
+    eventId: 'EVT-003',
+    title: 'AWB scanned',
+    tick: 10,
+    source: custodySourceDriver,
+    actor: driverName,
+  ),
   CustodyEvent(
     eventId: 'EVT-004',
     title: 'Seal verified',
     tick: 12,
     detail: 'SL-2291',
+    source: custodySourceDriver,
+    actor: driverName,
   ),
   CustodyEvent(
     eventId: 'EVT-005',
     title: 'Excursion detected',
     tick: 130,
     detail: '8.9 °C near Nashik hub',
+    source: custodySourceSensor,
   ),
   CustodyEvent(
     eventId: 'EVT-006',
     title: 'Excursion acknowledged',
     tick: 131,
     detail: 'Compressor reset',
+    source: custodySourceDriver,
+    actor: driverName,
   ),
-  CustodyEvent(eventId: 'EVT-007', title: 'Out for delivery', tick: 1050),
+  CustodyEvent(
+    eventId: 'EVT-007',
+    title: 'Out for delivery',
+    tick: 1050,
+    source: custodySourceDriver,
+    actor: driverName,
+  ),
   CustodyEvent(
     eventId: 'EVT-008',
     title: 'Delivered · e-POD generated · Sent for invoicing',
     tick: 1053,
+    source: custodySourceSystem,
   ),
 ];

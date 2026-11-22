@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/band.dart';
+import '../domain/fictional_data.dart';
 import 'scenario_state.dart';
 
 final class ScenarioController extends Notifier<ScenarioState> {
@@ -57,7 +58,11 @@ final class ScenarioController extends Notifier<ScenarioState> {
 
   void callControlRoom() => state = state.callControlRoom();
 
-  void recordCall(String title) => state = state.recordCall(title);
+  void recordCall(
+    String title, {
+    String source = custodySourceDriver,
+    String? actor,
+  }) => state = state.recordCall(title, source: source, actor: actor);
 
   void smsControlRoom() => state = state.smsControlRoom();
 

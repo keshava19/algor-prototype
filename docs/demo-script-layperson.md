@@ -186,8 +186,8 @@ to Step 5 by itself when the e-POD is ready.
 > in-band — the share of the trip inside the safe zone — and MKT, an average that weighs warm
 > moments more heavily.
 
-**Do.** Tap **Download audit PDF**, show the share sheet with the filename
-`algor-field-audit-172-45678901.pdf`, and open the preview.
+**Do.** Tap **Download audit PDF** in the top bar (or the big button at the bottom), show the
+share sheet with the filename `algor-field-audit-172-45678901.pdf`, and open the preview.
 
 **Say.**
 

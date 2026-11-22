@@ -15,6 +15,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/util/formatters.dart';
 import '../../shared/widgets/map_panel.dart';
 import '../../shared/widgets/milestone_timeline.dart';
+import '../../shared/widgets/status_chip.dart';
 import '../../shared/widgets/temp_band_chart.dart';
 import '../../shared/widgets/temp_readout.dart';
 import 'audit_pdf_service.dart';
@@ -43,8 +44,15 @@ class ClientShipmentDetail extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(sample ? 'Sample delivery' : 'Live shipment'),
+        title: Text(
+          sample
+              ? 'Sample delivery'
+              : delivered
+              ? finalRecordTitle
+              : 'Live shipment',
+        ),
         actions: [
+          _AuditPdfIconButton(state: state),
           IconButton(
             icon: const Icon(Icons.list_alt_outlined),
             tooltip: 'Shipment list',
@@ -60,59 +68,86 @@ class ClientShipmentDetail extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'AWB $awbNumber',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text('Delivery pack', style: theme.textTheme.labelLarge),
+                      const Spacer(),
+                      StatusChip(phase: state.phase),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'AWB $awbNumber',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '$laneLabel · ${band.productLabel}',
-                      style: theme.textTheme.bodySmall?.copyWith(
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '$laneLabel · ${band.productLabel}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                  ),
+                  const SizedBox(height: 7),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 4,
+                    children: [
+                      if (state.sealVerified)
+                        _MetaBadge(
+                          icon: Icons.verified_outlined,
+                          text: 'Seal verified · ${state.sealNumber}',
+                          color: AppColors.success,
+                        ),
+                      _MetaBadge(
+                        icon: Icons.science_outlined,
+                        text: '$loggerId · $loggerCalibration',
                         color: theme.colorScheme.onSurface.withValues(
                           alpha: 0.6,
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 7),
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 4,
+                      if (!delivered)
+                        _MetaBadge(
+                          icon: Icons.schedule,
+                          text:
+                              'ETA ${formatClock(etaTick)} · '
+                              '${formatRemaining(state.tick)}',
+                          color: AppColors.cyan,
+                        ),
+                    ],
+                  ),
+                  if (delivered) ...[
+                    const SizedBox(height: 8),
+                    Row(
                       children: [
-                        if (state.sealVerified)
-                          _MetaBadge(
-                            icon: Icons.verified_outlined,
-                            text: 'Seal verified · ${state.sealNumber}',
+                        const Icon(
+                          Icons.task_alt,
+                          size: 14,
+                          color: AppColors.success,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Final record · delivered '
+                          '${formatClock(state.epod?.deliveredTick ?? state.tick)} IST',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
                             color: AppColors.success,
                           ),
-                        _MetaBadge(
-                          icon: Icons.science_outlined,
-                          text: '$loggerId · $loggerCalibration',
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.6,
-                          ),
                         ),
-                        if (!delivered)
-                          _MetaBadge(
-                            icon: Icons.schedule,
-                            text:
-                                'ETA ${formatClock(etaTick)} · '
-                                '${formatRemaining(state.tick)}',
-                            color: AppColors.cyan,
-                          ),
                       ],
                     ),
                   ],
-                ),
+                ],
               ),
-            ],
+            ),
           ),
           const SizedBox(height: 14),
           Card(
@@ -146,6 +181,7 @@ class ClientShipmentDetail extends ConsumerWidget {
                     celsius: state.currentTemperature,
                     band: band,
                     phase: state.phase,
+                    showChip: false,
                     stale: state.telemetryGap && !delivered,
                     sourceLabel: formatFeedLabel(
                       lastFeedTick: state.lastFeedTick,
@@ -477,6 +513,45 @@ class _Stat extends StatelessWidget {
   }
 }
 
+class _AuditPdfIconButton extends StatefulWidget {
+  const _AuditPdfIconButton({required this.state});
+
+  final ScenarioState state;
+
+  @override
+  State<_AuditPdfIconButton> createState() => _AuditPdfIconButtonState();
+}
+
+class _AuditPdfIconButtonState extends State<_AuditPdfIconButton> {
+  bool _busy = false;
+
+  Future<void> _share() async {
+    setState(() => _busy = true);
+    try {
+      await shareAuditPdf(widget.state);
+    } on Exception {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text(pdfFailedLabel)));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    icon: _busy
+        ? const SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        : const Icon(Icons.picture_as_pdf_outlined),
+    tooltip: downloadAuditPdfLabel,
+    onPressed: _busy ? null : _share,
+  );
+}
+
 class _AuditPdfButton extends StatefulWidget {
   const _AuditPdfButton({required this.state});
 
@@ -494,13 +569,9 @@ class _AuditPdfButtonState extends State<_AuditPdfButton> {
     try {
       await shareAuditPdf(widget.state);
     } on Exception {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not prepare the PDF — try again.'),
-          ),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text(pdfFailedLabel)));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -517,7 +588,7 @@ class _AuditPdfButtonState extends State<_AuditPdfButton> {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : const Icon(Icons.picture_as_pdf_outlined),
-      label: Text(_busy ? 'Preparing PDF…' : downloadAuditPdfLabel),
+      label: Text(_busy ? pdfPreparingLabel : downloadAuditPdfLabel),
     );
   }
 }

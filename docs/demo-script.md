@@ -30,7 +30,7 @@ throughout.
 | 22–32 s | Excursion | Long-press the footer → **Trigger excursion**. Overlay: "Reefer 8.9 °C — outside 2–8 °C band · Near Nashik hub · MH 04 KF 4001". Tap **Call control room** (rings 2 s → Connected → Close); tap **Log action**, choose **Compressor reset**, add "Compressor restarted, set-point restored", save. |
 | 32–40 s | Recovery + signature | Toggle offline **off**. The three queued items sync one per second. Sign on the pad — **Done** is always in the sticky footer — and tap **Done**. The footer counts the syncs. |
 | 40–46 s | e-POD | The footer reaches 3 of 3; the screen advances itself to "e-POD generated". Tap **View client view**. |
-| 46–56 s | Client QA | Live shipment: temperature curve, excursion acknowledged card, custody trail. Scroll to **Download audit PDF**; show the share sheet and filename `algor-field-audit-172-45678901.pdf`. |
+| 46–56 s | Client QA | Live shipment: delivery-pack header, temperature curve, excursion acknowledged card, custody trail. Tap **Download audit PDF** in the top bar (or the big button at the bottom); show the share sheet and filename `algor-field-audit-172-45678901.pdf`. |
 | 56–60 s | Close | Say: "One Flutter codebase on top of your existing tracking data. Happy to walk Nitesh's team through the integration approach in 15 minutes." |
 
 If the take runs long, replace the signature and delivery block with the tray's

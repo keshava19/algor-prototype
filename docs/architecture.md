@@ -53,7 +53,7 @@ and the hint names the tap interaction. (D34 amended, D35 amended, D60–D63)
 `scanned`, `sealNumber`, `sealVerified`, `signature` (record: bytes/name/tick/note), `isOffline`,
 `queue` (sealed `ChecklistQueued | ScanQueued | SealPhotoQueued`, each with `eventId`),
 `failNextSync`, `epod`, `excursion`, `escalationSecondsLeft`, `escalationDuration`,
-`driftStartedTick`, `custody` (each event with `eventId`), `eventSeq`.
+`driftStartedTick`, `custody` (each event with `eventId`, `source`, `actor`), `eventSeq`.
 
 Capture commands append a queue item and a custody event sharing one event ID; each capture
 gets a unique `EVT-NNN`. Queue promotions: one item one step per tick while online; a failed
@@ -114,10 +114,10 @@ home icon returning to `/`.
 | --- | --- | --- |
 | `TempBandChart` | readings, band, excursionTick, height | band-relative fixed axis, band via range annotation |
 | `MapPanel` | truckPosition, isExcursion, height | OSM tiles, attribution, fallback grid on tile failure |
-| `TempReadout` | celsius, band, phase, sourceLabel, stale | 36 px w600 value, band bar, status chip, feed/stale row |
+| `TempReadout` | celsius, band, phase, sourceLabel, stale, showChip | 36 px w600 value, band bar, optional status chip, feed/stale row |
 | `CountdownRing` | secondsLeft, totalSeconds, size | arc painter, mm:ss label |
 | `StatusChip` | phase | In transit / Excursion! / Excursion acknowledged / Delivered |
-| `MilestoneTimeline` | events | custody events, newest first |
+| `MilestoneTimeline` | events | custody events, newest first; tap expands event ID, actor and source |
 | `SyncQueueSheet` | queue, onRetry | event ID + per-item status; failed rows retry |
 | `CallSheet` | title, subtitle, custodyTitle | 2 s ringing → Connected, appends custody |
 | `ExcursionPushBanner` | enabled | simulated push card, 5 s auto-dismiss |
@@ -143,6 +143,7 @@ reason, note, escalation, delivery note); custody table; then a forced new page 
 per-page footer "Concept prepared for Algor — mock data only". Fonts:
 `assets/fonts/Roboto-Regular.ttf`, `Roboto-Bold.ttf`. Share via `Printing.sharePdf`
 with filename `algor-field-audit-172-45678901.pdf`. (D27 amended for the two-page layout)
+Custody `source`/`actor` stays app-only: the PDF keeps its ratified two-page contract (D66).
 
 ## Testability
 

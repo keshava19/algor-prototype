@@ -35,7 +35,7 @@ DONE_X=540; DONE_Y=1520
 VIEW_CLIENT_X=660; VIEW_CLIENT_Y=1680
 CLIENT_CARD_X=540; CLIENT_CARD_Y=630
 SCROLL_X=540; SCROLL_FROM_Y=1500; SCROLL_TO_Y=500; SCROLL_MS=400
-PDF_X=540; PDF_Y=1500
+PDF_X=765; PDF_Y=137
 
 tap()  { "$ADB" shell input tap "$1" "$2" >/dev/null; }
 press() { "$ADB" shell input swipe "$1" "$2" "$1" "$2" 900 >/dev/null; }

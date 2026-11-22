@@ -27,6 +27,7 @@ the code, and **decision references**.
 | 14 | Strict analysis with zero comments or suppressions | Modern idioms adopted up front; registry as documentation | D29, D44 |
 | 15 | Provider-free shared widgets | Constructor-only data; two sanctioned provider exceptions | D9 |
 | 16 | Action and sync feedback hidden below the fold | Sticky Done footer that becomes the capture status; auto-advance on e-POD | D34, D35, D60, D61, D62, D63 |
+| 17 | Report access below the fold and anonymous custody | App-bar PDF action, delivery-pack header, expandable provenance rows | D64, D65, D66 |
 
 ## Time, determinism and testability
 
@@ -393,6 +394,29 @@ and the hint now names the tap.
 `assets/images/logger_armed.png` · `assets/images/reefer_clean.png`.
 
 **Decisions.** D34 (amended), D35 (amended), D60, D61, D62, D63.
+
+### 21. One-tap report access and honest provenance
+
+**Problem.** The audit PDF sat at the bottom of a long scrolling detail, and custody rows carried
+an event ID but no actor or source — so the demo could not show *who* or *which system* produced
+an entry, and an ops-initiated call would have looked identical to a driver one. The delivered
+page also still called itself "Live shipment".
+
+**Resolution.** The detail's app bar gained a PDF action that shares the bottom CTA's handler and
+error path; the header consolidated into a delivery-pack card with an explicit "Final record ·
+delivered HH:MM IST" line, and the title becomes "Final record" once delivered. `CustodyEvent`
+gained `source` and `actor`; every construction site is tagged, with ops calls recorded as
+"Control room" and sensor detections as "Sensor feed". Timeline rows expand on tap to reveal
+event ID, actor and source, and the ops preview inherits the shared widget. The audit PDF
+deliberately stays unchanged.
+
+**Where.** `lib/features/client_view/client_shipment_detail.dart` (`_AuditPdfIconButton`, delivery
+pack card) · `lib/core/domain/models.dart` · `lib/core/scenario/scenario_state.dart` ·
+`lib/core/domain/fictional_data.dart` (custody source constants) ·
+`lib/shared/widgets/call_sheet.dart` · `lib/shared/widgets/milestone_timeline.dart` ·
+`lib/shared/widgets/temp_readout.dart` (`showChip`).
+
+**Decisions.** D64, D65, D66.
 
 ## Amendment trail
 

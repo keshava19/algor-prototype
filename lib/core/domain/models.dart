@@ -106,12 +106,16 @@ final class CustodyEvent {
     required this.title,
     required this.tick,
     this.detail,
+    this.source,
+    this.actor,
   });
 
   final String eventId;
   final String title;
   final int tick;
   final String? detail;
+  final String? source;
+  final String? actor;
 }
 
 final class ExcursionEvent {

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/domain/fictional_data.dart';
 import '../../core/scenario/providers.dart';
 import '../../core/theme/app_theme.dart';
 
@@ -11,13 +12,20 @@ Future<void> showCallSheet(
   required String title,
   required String subtitle,
   required String custodyTitle,
+  String custodySource = custodySourceDriver,
+  String? custodyActor,
 }) => showModalBottomSheet<void>(
   context: context,
   showDragHandle: true,
   isDismissible: false,
   enableDrag: false,
-  builder: (_) =>
-      CallSheet(title: title, subtitle: subtitle, custodyTitle: custodyTitle),
+  builder: (_) => CallSheet(
+    title: title,
+    subtitle: subtitle,
+    custodyTitle: custodyTitle,
+    custodySource: custodySource,
+    custodyActor: custodyActor,
+  ),
 );
 
 class CallSheet extends ConsumerStatefulWidget {
@@ -26,11 +34,15 @@ class CallSheet extends ConsumerStatefulWidget {
     required this.title,
     required this.subtitle,
     required this.custodyTitle,
+    this.custodySource = custodySourceDriver,
+    this.custodyActor,
   });
 
   final String title;
   final String subtitle;
   final String custodyTitle;
+  final String custodySource;
+  final String? custodyActor;
 
   @override
   ConsumerState<CallSheet> createState() => _CallSheetState();
@@ -48,7 +60,11 @@ class _CallSheetState extends ConsumerState<CallSheet> {
       setState(() => _connected = true);
       ref
           .read(scenarioControllerProvider.notifier)
-          .recordCall(widget.custodyTitle);
+          .recordCall(
+            widget.custodyTitle,
+            source: widget.custodySource,
+            actor: widget.custodyActor,
+          );
     });
   }
 

@@ -49,6 +49,7 @@ class ExcursionOverlay extends ConsumerWidget {
                   title: 'Control room',
                   subtitle: 'Algor control room · simulated call',
                   custodyTitle: 'Control room called',
+                  custodyActor: driverName,
                 ),
                 onSms: () => ref
                     .read(scenarioControllerProvider.notifier)

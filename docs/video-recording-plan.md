@@ -65,7 +65,7 @@ Companion files: [`../tools/video/beats.ass`](../tools/video/beats.ass) (caption
 | 35.8 | **View client view** | 12 → 13 |
 | 37.3 | Open the top shipment card | 13 |
 | 38.7, 40.1, 41.5, 42.9 | Four slow scrolls (over-scroll is harmless) | 13 |
-| 44.3 | **Download audit PDF** | 14 |
+| 44.3 | **Download audit PDF** in the app bar (pinned while scrolled) | 14 |
 | 44.8–60.0 | Hold; spinner then share sheet about 46–47 | 14 → 15 |
 | 60.0 | Recording finalizes at the time limit; pull and clean up | 15 ends |
 

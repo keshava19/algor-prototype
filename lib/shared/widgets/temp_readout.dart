@@ -14,6 +14,7 @@ class TempReadout extends StatelessWidget {
     required this.phase,
     required this.sourceLabel,
     this.stale = false,
+    this.showChip = true,
   });
 
   final double celsius;
@@ -21,6 +22,7 @@ class TempReadout extends StatelessWidget {
   final TripPhase phase;
   final String sourceLabel;
   final bool stale;
+  final bool showChip;
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +41,7 @@ class TempReadout extends StatelessWidget {
               ),
             ),
             const Spacer(),
-            StatusChip(phase: phase),
+            if (showChip) StatusChip(phase: phase),
           ],
         ),
         const SizedBox(height: 10),

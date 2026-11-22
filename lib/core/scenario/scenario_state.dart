@@ -55,6 +55,7 @@ final class ScenarioState {
         title: 'Dispatched',
         tick: 0,
         detail: 'Mumbai (BOM)',
+        source: custodySourceSystem,
       ),
     ],
     eventSeq: 1,
@@ -220,7 +221,13 @@ final class ScenarioState {
 
   String _nextEventId() => 'EVT-${(eventSeq + 1).toString().padLeft(3, '0')}';
 
-  ScenarioState _appendCustody(String title, {String? detail, int? atTick}) {
+  ScenarioState _appendCustody(
+    String title, {
+    String? detail,
+    int? atTick,
+    String source = custodySourceDriver,
+    String? actor,
+  }) {
     final id = _nextEventId();
     return copyWith(
       eventSeq: eventSeq + 1,
@@ -231,6 +238,8 @@ final class ScenarioState {
           title: title,
           tick: atTick ?? tick,
           detail: detail,
+          source: source,
+          actor: actor,
         ),
       ],
     );
@@ -269,6 +278,8 @@ final class ScenarioState {
           eventId: id,
           title: 'Pre-trip checklist confirmed',
           tick: tick,
+          source: custodySourceDriver,
+          actor: driverName,
         ),
       ],
     );
@@ -295,6 +306,8 @@ final class ScenarioState {
           title: 'AWB scanned',
           tick: tick,
           detail: awbLabel,
+          source: custodySourceDriver,
+          actor: driverName,
         ),
       ],
     );
@@ -322,6 +335,8 @@ final class ScenarioState {
           title: 'Seal verified',
           tick: tick,
           detail: number,
+          source: custodySourceDriver,
+          actor: driverName,
         ),
       ],
     );
@@ -353,6 +368,8 @@ final class ScenarioState {
           title: 'Delivery note',
           tick: tick,
           detail: note,
+          source: custodySourceDriver,
+          actor: consigneeName,
         ),
       ],
     );
@@ -408,6 +425,7 @@ final class ScenarioState {
           tick: jumpTick,
           detail:
               '${bandProfile.excursion.toStringAsFixed(1)} °C near Nashik hub',
+          source: custodySourceSensor,
         ),
       ],
     );
@@ -438,6 +456,8 @@ final class ScenarioState {
           detail: trimmedNote == null || trimmedNote.isEmpty
               ? reasonCode
               : '$reasonCode — $trimmedNote',
+          source: custodySourceDriver,
+          actor: driverName,
         ),
       ],
     );
@@ -445,11 +465,22 @@ final class ScenarioState {
 
   ScenarioState callControlRoom() => recordCall('Control room called');
 
-  ScenarioState recordCall(String title) =>
-      _appendCustody(title, detail: controlRoomNote);
+  ScenarioState recordCall(
+    String title, {
+    String source = custodySourceDriver,
+    String? actor,
+  }) => _appendCustody(
+    title,
+    detail: controlRoomNote,
+    source: source,
+    actor: actor,
+  );
 
-  ScenarioState smsControlRoom() =>
-      _appendCustody('Control room SMS sent', detail: smsControlRoomNote);
+  ScenarioState smsControlRoom() => _appendCustody(
+    'Control room SMS sent',
+    detail: smsControlRoomNote,
+    actor: driverName,
+  );
 
   ScenarioState setEscalationDuration(int seconds) {
     if (phase == TripPhase.excursionActive) return this;
@@ -471,7 +502,13 @@ final class ScenarioState {
       eventSeq: eventSeq + 1,
       custody: [
         ...custody,
-        CustodyEvent(eventId: id, title: 'Out for delivery', tick: jumpTick),
+        CustodyEvent(
+          eventId: id,
+          title: 'Out for delivery',
+          tick: jumpTick,
+          source: custodySourceDriver,
+          actor: driverName,
+        ),
       ],
     );
   }
@@ -525,7 +562,10 @@ final class ScenarioState {
     return copyWith(
       escalationSecondsLeft: 0,
       excursion: excursion!.copyWith(escalated: true),
-    )._appendCustody('Escalated — control room notified');
+    )._appendCustody(
+      'Escalated — control room notified',
+      source: custodySourceSystem,
+    );
   }
 
   ScenarioState _autoDeliver() {
@@ -548,6 +588,7 @@ final class ScenarioState {
           eventId: id,
           title: 'Delivered · e-POD generated · Sent for invoicing',
           tick: tick,
+          source: custodySourceSystem,
         ),
       ],
     );

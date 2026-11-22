@@ -24,10 +24,11 @@ fictional.
 - **Excursion response** — simulated push alert, overlay pinned at 8.9 °C, countdown to
   escalation, Acknowledge / Log action / Call control room / one-tap SMS fallback.
   Acknowledging starts the decay back into the band; escalation still allows acknowledgement.
-- **Client QA view** — live curve with the 2–8 °C band, min/max/mean/MKT, in-band percentage,
-  ETA, seal and logger-calibration badges, custody trail, e-POD card, and a one-tap audit PDF
-  (full-trip curve, excursion record, custody table, signature, capture verification with event
-  IDs, delivery note, concept footer on every page).
+- **Client QA view** — delivery-pack header (status chip, live-vs-final state, seal and
+  logger-calibration badges), live curve with the 2–8 °C band, min/max/mean/MKT, in-band
+  percentage, ETA, custody trail whose rows expand to event ID, actor and source, e-POD card,
+  and a one-tap audit PDF from the top bar (full-trip curve, excursion record, custody table,
+  signature, capture verification with event IDs, delivery note, concept footer on every page).
 - **Multi-band preview** — vaccine 2–8, blood 1–6, controlled room temperature 15–25 and frozen
   −30…−20 °C. Chart, bar, labels and PDF share one band profile.
 
