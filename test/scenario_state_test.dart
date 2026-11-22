@@ -189,6 +189,16 @@ void main() {
     expect(frozen.tick, vaccine.tick);
   });
 
+  test('excursion reading stays frozen across a band preview', () {
+    final detected = ScenarioState.initial().triggerExcursion();
+    final recorded = detected.excursion!.reading;
+    final preview = detected.setBand(ProductBand.crt);
+    expect(recorded, 8.9);
+    expect(preview.excursion?.reading, recorded);
+    expect(preview.currentTemperature, BandProfiles.crt.excursion);
+    expect(preview.custody.last.detail, '8.9 °C near Nashik hub');
+  });
+
   test('delivery note is captured and carried onto the e-POD', () {
     var state = ScenarioState.initial();
     for (var index = 0; index < state.checklist.length; index++) {

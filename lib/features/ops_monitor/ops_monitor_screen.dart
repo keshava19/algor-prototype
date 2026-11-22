@@ -28,6 +28,11 @@ class OpsMonitorScreen extends ConsumerWidget {
     final recentCustody = state.custody.length <= 4
         ? state.custody
         : state.custody.sublist(state.custody.length - 4);
+    final badge = state.phase == TripPhase.delivered
+        ? (label: 'CLOSED', color: AppColors.success, icon: Icons.check_circle)
+        : state.telemetryGap
+        ? (label: 'STALE', color: AppColors.queued, icon: Icons.wifi_off)
+        : (label: 'LIVE', color: AppColors.danger, icon: Icons.circle);
 
     return Scaffold(
       appBar: AppBar(
@@ -48,29 +53,19 @@ class OpsMonitorScreen extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color:
-                      (state.telemetryGap ? AppColors.queued : AppColors.danger)
-                          .withValues(alpha: 0.14),
+                  color: badge.color.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      state.telemetryGap ? Icons.wifi_off : Icons.circle,
-                      size: 8,
-                      color: state.telemetryGap
-                          ? AppColors.queued
-                          : AppColors.danger,
-                    ),
+                    Icon(badge.icon, size: 9, color: badge.color),
                     const SizedBox(width: 6),
                     Text(
-                      state.telemetryGap ? 'STALE' : 'LIVE',
+                      badge.label,
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
-                        color: state.telemetryGap
-                            ? AppColors.queued
-                            : AppColors.danger,
+                        color: badge.color,
                         letterSpacing: 0.6,
                       ),
                     ),

@@ -37,8 +37,10 @@ final class BandProfile {
 
   double get axisSpan => axisMax - axisMin;
 
-  String get excursionTitle =>
-      'Reefer ${excursion.toStringAsFixed(1)} °C — outside $rangeLabel °C band';
+  String get excursionTitle => excursionTitleFor(excursion);
+
+  String excursionTitleFor(double reading) =>
+      'Reefer ${reading.toStringAsFixed(1)} °C — outside $rangeLabel °C band';
 }
 
 abstract final class BandProfiles {

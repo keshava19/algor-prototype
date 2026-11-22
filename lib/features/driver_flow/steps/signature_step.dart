@@ -73,7 +73,7 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
   Widget build(BuildContext context) {
     final state = ref.watch(scenarioControllerProvider);
     final theme = Theme.of(context);
-    final position = positionOnRoute(state.tick);
+    final position = positionOnRoute(state.lastFeedTick);
     final captured = state.signature;
 
     return ListView(

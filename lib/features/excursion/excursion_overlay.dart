@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/domain/band.dart';
 import '../../core/domain/fictional_data.dart';
 import '../../core/domain/models.dart';
 import '../../core/scenario/providers.dart';
@@ -38,7 +37,9 @@ class ExcursionOverlay extends ConsumerWidget {
                 totalSeconds: state.escalationDuration,
                 escalated: state.excursion?.escalated ?? false,
                 tick: state.tick,
-                band: state.bandProfile,
+                title: state.bandProfile.excursionTitleFor(
+                  state.excursion?.reading ?? state.bandProfile.excursion,
+                ),
                 smsSent: smsSent,
                 onAcknowledge: () =>
                     ref.read(scenarioControllerProvider.notifier).acknowledge(),
@@ -65,7 +66,7 @@ class _ExcursionCard extends StatelessWidget {
     required this.totalSeconds,
     required this.escalated,
     required this.tick,
-    required this.band,
+    required this.title,
     required this.smsSent,
     required this.onAcknowledge,
     required this.onLogAction,
@@ -77,7 +78,7 @@ class _ExcursionCard extends StatelessWidget {
   final int totalSeconds;
   final bool escalated;
   final int tick;
-  final BandProfile band;
+  final String title;
   final bool smsSent;
   final VoidCallback onAcknowledge;
   final VoidCallback onLogAction;
@@ -146,7 +147,7 @@ class _ExcursionCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    band.excursionTitle,
+                    title,
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,

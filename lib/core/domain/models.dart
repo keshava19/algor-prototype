@@ -117,6 +117,7 @@ final class CustodyEvent {
 final class ExcursionEvent {
   const ExcursionEvent({
     required this.startedTick,
+    required this.reading,
     required this.location,
     this.reasonCode,
     this.note,
@@ -125,6 +126,7 @@ final class ExcursionEvent {
   });
 
   final int startedTick;
+  final double reading;
   final String location;
   final String? reasonCode;
   final String? note;
@@ -138,6 +140,7 @@ final class ExcursionEvent {
     bool? escalated,
   }) => ExcursionEvent(
     startedTick: startedTick,
+    reading: reading,
     location: location,
     reasonCode: reasonCode ?? this.reasonCode,
     note: note ?? this.note,

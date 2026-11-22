@@ -109,6 +109,7 @@ final class ScenarioState {
         ),
         excursion: const ExcursionEvent(
           startedTick: 130,
+          reading: 8.9,
           location: 'Near Nashik hub · MH 04 KF 4001',
           reasonCode: 'Compressor reset',
           acknowledgedTick: 131,
@@ -395,6 +396,7 @@ final class ScenarioState {
       eventSeq: eventSeq + 1,
       excursion: ExcursionEvent(
         startedTick: jumpTick,
+        reading: bandProfile.excursion,
         location: excursionLocation,
       ),
       escalationSecondsLeft: escalationDuration,

@@ -23,6 +23,13 @@ class DemoTray extends ConsumerWidget {
     final state = ref.watch(scenarioControllerProvider);
     final controller = ref.read(scenarioControllerProvider.notifier);
     final theme = Theme.of(context);
+    final canArmFailure =
+        state.phase != TripPhase.delivered &&
+        state.queue.any(
+          (item) =>
+              item.status == QueueItemStatus.pending ||
+              item.status == QueueItemStatus.syncing,
+        );
 
     void close() => Navigator.of(context).pop();
 
@@ -121,7 +128,7 @@ class DemoTray extends ConsumerWidget {
                   label: Text(
                     state.failNextSync ? 'Failure armed' : failNextSyncLabel,
                   ),
-                  onPressed: state.failNextSync
+                  onPressed: state.failNextSync || !canArmFailure
                       ? null
                       : controller.armSyncFailure,
                 ),

@@ -57,6 +57,8 @@ class ClientShipmentsScreen extends ConsumerWidget {
             temperature: formatTemp(state.currentTemperature),
             footnote: state.phase == TripPhase.delivered
                 ? 'Delivered · e-POD generated'
+                : state.telemetryGap
+                ? '${state.custody.length} custody events · feed stale'
                 : '${state.custody.length} custody events · live feed',
             onTap: () => context.go('/client/live'),
           ),

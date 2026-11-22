@@ -11,15 +11,15 @@ the code, and **decision references**.
 
 | # | Difficulty | Resolution | Decisions |
 | --- | --- | --- | --- |
-| 1 | One time basis for every screen | Single scenario epoch and clock; all times derived from the tick | D11, D31, D32 |
-| 2 | Live-looking but deterministic temperature | Seeded noise and fixed thermal rates; Arrhenius MKT | D21 |
+| 1 | One time basis for every screen | App clock plus a separate sensor-feed clock with a visible stale state | D11, D31, D32, D48 |
+| 2 | Live-looking but deterministic temperature | Seeded noise and per-band thermal profiles; Arrhenius MKT | D21, D53 |
 | 3 | Testing a ticking app without timers | Injectable ticker; manual `advanceTick()` in tests | D20, D28 |
 | 4 | Impossible states from out-of-order taps | Immutable state, guarded pure transitions, fixed tick order | D10, D12, D17 |
 | 5 | Escalation countdown dead-ends | Expiry records escalation; acknowledgement stays open | D16 |
 | 6 | Offline queue and delivery that are truthful | Three real queue items, one promotion per tick, automatic e-POD | D13, D14, D15, D33 |
 | 7 | Excursion overlay ownership and sheet context | Overlay mounted in the shell `Stack`; route-based visibility | D18 |
 | 8 | Live versus sample client rendering | Explicit live/sample routes over one `sampleDelivered()` factory | D19, D40 |
-| 9 | Temperature band across fl_chart versions | `HorizontalRangeAnnotation` on a fixed 0–10 °C axis | D22, D39 |
+| 9 | Temperature band across fl_chart versions | `HorizontalRangeAnnotation` on a band-relative fixed axis | D22, D39, D53 |
 | 10 | Audit PDF from any state | Pure `(state) → bytes` builder with per-page footer | D27, D28, D41 |
 | 11 | Camera, geotag and signature without permissions | Simulated scan, composited watermark, live signature pad | D7, D24, D36 |
 | 12 | Map that works without network | Tile-failure fallback to route grid and "Offline map preview" | D47 |
@@ -29,34 +29,39 @@ the code, and **decision references**.
 
 ## Time, determinism and testability
 
-### 1. One clock for every displayed time
+### 1. One app clock plus one sensor-feed clock
 
 **Problem.** An 18.5-hour journey has to compress into minutes, but every surface shows a time —
-clock chips, charts, custody stamps, map position, photo watermarks and the PDF. Two clocks
-(wall time and trip time) would produce an audit app whose own records contradict each other.
+clock chips, charts, custody stamps, map position, photo watermarks and the PDF. Wall time and
+trip time must not mix, yet a stale sensor feed must never masquerade as live.
 
 **Resolution.** One scenario epoch — 21 Nov 2026 04:15 IST is tick 0 — driven by a single 1 Hz
 timer. The initial tick is 45 (05:00) with 45 readings of prior history, so the chart is alive on
-the first frame. Every displayed time is derived from the tick; wall time is never shown. Demo
-time jumps move the same tick (`triggerExcursion()` to at least tick 130 = 06:25,
-`jumpToOutForDelivery()` to at least tick 1050 = 21:45), so the map position, alert copy and
-custody stamps stay coherent.
+the first frame. App-side times (escalation, ETA, custody stamps, capture labels) use `tick`;
+sensor-derived views (temperature, map, charts, PDF curves, photo/signature location) use
+`lastFeedTick`. The demo tray can freeze the feed while the app clock continues, and the readout
+labels the gap. Demo time jumps move the same tick (`triggerExcursion()` to at least tick
+130 = 06:25, `jumpToOutForDelivery()` to at least tick 1050 = 21:45), so the map position, alert
+copy and custody stamps stay coherent.
 
 **Where.** `lib/core/domain/fictional_data.dart` (`scenarioTime`, `initialTick`,
 `excursionJumpTick`, `outForDeliveryTick`, `deliveredTick`, `etaTick`) ·
 `lib/core/scenario/scenario_controller.dart` (the 1 Hz `Timer.periodic`) ·
-`lib/core/util/formatters.dart` (`formatClock`, `formatDateTime`, `formatWatermark`).
+`lib/core/scenario/scenario_state.dart` (`lastFeedTick`, `telemetryGap`) ·
+`lib/core/util/formatters.dart` (`formatClock`, `formatDateTime`, `formatWatermark`,
+`formatFeedLabel`).
 
-**Decisions.** D11, D31, D32.
+**Decisions.** D11, D31, D32, D48.
 
 ### 2. Temperature that looks alive but replays identically
 
 **Problem.** The readout must wobble like real telemetry, yet be identical on every take and unit
 test — and the mean kinetic temperature (MKT) must be honest math, not decoration.
 
-**Resolution.** Seeded noise (seed 42, ±0.3 °C) over a 4.2 °C base. Drift adds 0.35 °C per tick;
-the excursion pins at 8.9 °C; after acknowledgement the curve decays 0.8 °C per tick toward
-4.5 °C. MKT uses the Arrhenius equation with Ea 83.144 kJ/mol and R 8.314462618.
+**Resolution.** Seeded noise (seed 42, ±0.3 °C) over a per-band base. Each `BandProfile` owns its
+base, excursion pin, floor and drift/decay rates; the vaccine profile reproduces the original
+4.2 → 8.9 → 4.5 curve (0.35 drift, 0.8 decay). MKT uses the Arrhenius equation with Ea
+83.144 kJ/mol and R 8.314462618.
 
 **Where.** `lib/core/domain/temperature.dart`.
 
@@ -117,11 +122,13 @@ sync visibly, and block delivery until complete — and the sync has to be watch
 without looking instant. Delivery also must not hinge on a manual "mark delivered" button.
 
 **Resolution.** The queue holds exactly three capture items. While online, one item advances one
-status per tick (`pending → syncing → synced`), producing a one-per-second drain.
-`canDeliver` requires a signature, an online connection and a fully synced queue; the e-POD then
-generates automatically inside `nextTick()` and the trip becomes delivered. Signing while
-offline shows "e-POD held locally — will send on reconnect". The offline banner renders the live
-queue count, not a fixed string (an amendment during execution).
+status per tick (`pending → syncing → synced`), producing a one-per-second drain. Each capture
+carries a unique `EVT-NNN` ID shared with its custody entry. A one-shot demo control can turn the
+next promotion into `failed`; the queue offers Retry, and delivery stays blocked until the item
+syncs. `canDeliver` requires a signature, an online connection and a fully synced queue; the
+e-POD then generates automatically inside `nextTick()` and the trip becomes delivered. Signing
+while offline shows "e-POD held locally — will send on reconnect". The offline banner renders the
+live queue count, not a fixed string (an amendment during execution).
 
 **Where.** `lib/core/domain/models.dart` (sealed queue item types) ·
 `lib/core/scenario/scenario_state.dart` (`nextTick` order, `_syncStep`, `canDeliver`,
@@ -142,13 +149,16 @@ its action sheets need a valid Navigator context. This one was amended twice dur
 **Resolution.** The overlay is mounted once in the shared shell above the routed child, inside a
 `Stack`, so its sheets resolve against the root Navigator. It is not a route and not a dialog.
 Visibility is route-based: the overlay is enabled only on `/driver` and shows only while the
-phase is `excursionActive`, so a stale role cannot render it over the client view.
+phase is `excursionActive`, so a stale role cannot render it over the client view. A second shell
+widget fires a simulated heads-up banner on the driving→excursionActive transition (auto-dismiss
+5 s, dismiss-only, suppressed on `/client/sample`), so the alert reads as a push without any
+notification permission.
 
-**Where.** `lib/shared/widgets/app_shell.dart` (`Stack(routeChild, ExcursionOverlay)`) ·
-`lib/features/excursion/excursion_overlay.dart` (`enabled` parameter) ·
-`lib/routing/app_router.dart`.
+**Where.** `lib/shared/widgets/app_shell.dart` (`Stack(routeChild, ExcursionOverlay,
+ExcursionPushBanner)`) · `lib/features/excursion/excursion_overlay.dart` (`enabled` parameter) ·
+`lib/features/excursion/excursion_push_banner.dart` · `lib/routing/app_router.dart`.
 
-**Decisions.** D18 (amended twice).
+**Decisions.** D18 (amended twice), D49.
 
 ### 8. Live versus sample rendering without duplication
 
@@ -172,18 +182,21 @@ code.
 
 ### 9. Temperature band rendering across fl_chart versions
 
-**Problem.** The 2–8 °C band has to sit behind the temperature line. Positioned-overlay hacks
-are fragile across layout changes and fl_chart API revisions, and both the live chart and the
-PDF curve must stay readable.
+**Problem.** The temperature band has to sit behind the line, positioned-overlay hacks are
+fragile across layout changes and fl_chart API revisions, and the same chart must serve four
+product bands with very different ranges.
 
-**Resolution.** The band uses fl_chart 1.3's `HorizontalRangeAnnotation` on a fixed 0–10 °C
-Y-axis. The live chart shows a trailing 60-reading window; the PDF curve shows the full trip
-downsampled to at most 240 points, with the excursion marked by a red dot.
+**Resolution.** The band uses fl_chart 1.3's `HorizontalRangeAnnotation`. The Y-axis is fixed
+per `BandProfile` (vaccine 0–10, blood 0–8, CRT 10–30, frozen −35…−10) and is shared by the live
+chart, the readout bar and the PDF painter. The live chart shows a trailing 60-reading window;
+the PDF curve shows the full trip downsampled to at most 240 points, ending at the last received
+reading, with excursions marked by red dots.
 
-**Where.** `lib/shared/widgets/temp_band_chart.dart` · `lib/core/scenario/providers.dart`
+**Where.** `lib/core/domain/band.dart` · `lib/shared/widgets/temp_band_chart.dart` ·
+`lib/shared/widgets/temp_readout.dart` · `lib/core/scenario/providers.dart`
 (`chartReadingsProvider`, trailing 60) · `lib/features/client_view/audit_pdf_service.dart`.
 
-**Decisions.** D22 (amended), D39.
+**Decisions.** D22 (amended twice), D39, D53.
 
 ### 10. The audit PDF from any state
 
@@ -288,6 +301,75 @@ custody).
 
 **Decisions.** D9 (amended).
 
+## v2 concept alignment (dossier v2)
+
+### 16. A stale feed that cannot look live
+
+**Problem.** The dossier requires a "last updated" signal so a cached reading is never mistaken
+for live telemetry. Freezing only the temperature would leave the map, chart and PDF telling a
+different story.
+
+**Resolution.** Introduced `lastFeedTick` and a demo-tray **Telemetry gap**. The readout says
+"Stale · last received HH:MM · N min ago", the ops badge flips LIVE→STALE (and CLOSED when
+delivered), the map and chart freeze, and the PDF ends at the last received reading. The driver
+evidence queue remains a separate channel.
+
+**Where.** `lib/core/scenario/scenario_state.dart` · `lib/shared/widgets/temp_readout.dart` ·
+`lib/features/ops_monitor/ops_monitor_screen.dart` · `lib/shared/widgets/demo_tray.dart`.
+
+**Decisions.** D48.
+
+### 17. An alert that reads as a push without notification permission
+
+**Problem.** The excursion is described as a pushed alert, but runtime notification permission
+would break the zero-permission guardrail and slow the demo.
+
+**Resolution.** A simulated heads-up card appears on the driving→excursionActive transition,
+auto-dismisses after five seconds, dismisses on tap or close, and is suppressed on the static
+sample screen. The full-screen driver overlay still owns acknowledgement. The alert also gained
+a one-tap **SMS control room** GSM fallback that logs a custody event and works while the data
+toggle is offline.
+
+**Where.** `lib/features/excursion/excursion_push_banner.dart` ·
+`lib/features/excursion/excursion_overlay.dart` · `lib/core/scenario/scenario_state.dart`
+(`smsControlRoom`).
+
+**Decisions.** D38 (amended), D49, D50.
+
+### 18. A sync path that can fail safely
+
+**Problem.** A queue that can only succeed is not a credible offline contract. The dossier names
+pending, synced and failed, with retries and idempotent event IDs.
+
+**Resolution.** Every capture gets an `EVT-NNN` ID shared with its custody entry. The queue adds
+`failed`, a one-shot "Fail next sync" demo control arms the next promotion, failed rows offer
+Retry, and delivery stays blocked until all three captures synced. Event IDs appear in the queue
+sheet and the PDF capture-verification table; they are presented as retry identity, never as
+tamper evidence.
+
+**Where.** `lib/core/domain/models.dart` · `lib/core/scenario/scenario_state.dart` (`_syncStep`,
+`retryItem`, `armSyncFailure`) · `lib/shared/widgets/sync_queue_sheet.dart` ·
+`lib/features/client_view/audit_pdf_service.dart`.
+
+**Decisions.** D14 (amended), D51, D52.
+
+### 19. Four product bands without four charts
+
+**Problem.** The dossier demos vaccine, blood, CRT and frozen ranges. Duplicating chart, readout
+and PDF math per band would drift immediately.
+
+**Resolution.** One `BandProfile` owns range, base/excursion/floor, thermal rates, axis, labels
+and product copy; the chart, readout bar and PDF painter consume it. Band switching previews the
+live feed only; captured records are untouched. An excursion stores the peak reading at detection
+so a later preview cannot rewrite the incident. The signature step optionally records a delivery
+note; the client and PDF surface logger calibration, ETA and DPDP-aligned design copy.
+
+**Where.** `lib/core/domain/band.dart` · `lib/core/domain/temperature.dart` ·
+`lib/core/domain/models.dart` (`ExcursionEvent.reading`) ·
+`lib/features/client_view/client_shipment_detail.dart` · `lib/features/about/about_concept_sheet.dart`.
+
+**Decisions.** D21 (amended), D53, D54, D55, D56, D57, D59.
+
 ## Amendment trail
 
 Registry entries that changed during execution, kept here so the history is easy to audit.
@@ -296,10 +378,14 @@ Registry entries that changed during execution, kept here so the history is easy
 | --- | --- |
 | D5 | Offline banner copy renders the live queue count instead of a fixed number |
 | D9 | `CallSheet` also appends its simulated call to the custody trail |
+| D14 | Sync can fail into a retryable `failed` state; delivery stays blocked until synced |
 | D15 | e-POD unlock refined to signature + online + all three captures synced |
 | D18 | Overlay mount point fixed for sheet context; visibility made route-based |
 | D19 | Explicit `/client/live` detail route added |
-| D22 | Band rendering moved to fl_chart 1.3 `HorizontalRangeAnnotation` |
+| D21 | Temperature values moved into per-band profiles (vaccine curve unchanged) |
+| D22 | Band rendering moved to fl_chart 1.3 `HorizontalRangeAnnotation`; axis made band-relative |
 | D27 | Font licence corrected to Apache-2.0; two-page layout |
 | D28 | PDF generation test added to the smoke suite |
+| D38 | SMS fallback added beside the simulated call |
 | D43 | Compact 10–13 px metadata labels allowed; single 36 px display readout |
+| D48–D59 | v2 alignment: feed clock, push banner, SMS, event IDs, retry, bands, calibration, ETA, delivery note, DPDP copy, stored excursion reading |

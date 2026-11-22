@@ -88,7 +88,7 @@ canonical run (excursion 06:25, ack 06:26, out for delivery 21:45, e-POD 21:48).
 
 ## Language guardrails
 
-Use "audit-trail-backed" and "supports GDP documentation". Never claim "CDSCO-compliant" or
-"tamper-proof", never imply a live connection to Algor systems, and describe the app as
-"designed with DPDP obligations in mind" rather than DPDP-compliant. The concept footer must
-remain on screen and on every PDF page.
+Use "audit-trail-backed" and "supports GDP documentation". Never claim regulatory compliance,
+certification or tamper resistance, and never imply a live connection to Algor systems. Describe
+the app as "designed with DPDP obligations in mind" rather than DPDP-compliant. The concept
+footer must remain on screen and on every PDF page.

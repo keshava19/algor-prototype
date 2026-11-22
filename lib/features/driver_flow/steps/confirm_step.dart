@@ -20,6 +20,25 @@ class ConfirmStep extends ConsumerWidget {
     final failedCount = state.queue
         .where((item) => item.status == QueueItemStatus.failed)
         .length;
+    final queueStatus = delivered
+        ? (
+            text: 'e-POD generated · ${formatClock(state.epod!.deliveredTick)}',
+            icon: Icons.verified,
+            color: AppColors.success,
+          )
+        : failedCount > 0
+        ? (
+            text: 'Sync failed — retry below',
+            icon: Icons.error_outline,
+            color: AppColors.danger,
+          )
+        : state.isOffline
+        ? (text: epodHeldLabel, icon: Icons.cloud_off, color: AppColors.queued)
+        : (
+            text: 'Waiting for network confirmation',
+            icon: Icons.hourglass_top,
+            color: AppColors.cyan,
+          );
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -50,26 +69,11 @@ class ConfirmStep extends ConsumerWidget {
               children: [
                 Row(
                   children: [
-                    Icon(
-                      delivered
-                          ? Icons.verified
-                          : state.isOffline
-                          ? Icons.cloud_off
-                          : Icons.hourglass_top,
-                      color: delivered
-                          ? AppColors.success
-                          : state.isOffline
-                          ? AppColors.queued
-                          : AppColors.cyan,
-                    ),
+                    Icon(queueStatus.icon, color: queueStatus.color),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        delivered
-                            ? 'e-POD generated · ${formatClock(state.epod!.deliveredTick)}'
-                            : state.isOffline
-                            ? epodHeldLabel
-                            : 'Waiting for network confirmation',
+                        queueStatus.text,
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,

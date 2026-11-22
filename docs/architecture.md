@@ -52,21 +52,23 @@ item offers Retry and blocks delivery until synced.
 
 ## Two clocks and one owner per fact
 
-`tick` is the app/scenario clock (escalation, ETA, custody stamps). `lastFeedTick` is the last
-received sensor packet; temperature, truck position, charts and PDF curves read it. The demo
-tray's **Telemetry gap** freezes `lastFeedTick` while `tick` continues, so every feed-derived
-view goes stale together and the readout says "Stale · last received HH:MM". Triggering an
-excursion refreshes the feed once; the two time jumps clear the gap. The driver evidence queue
-(offline toggle) is a separate channel from the sensor feed.
+`tick` is the app/scenario clock (escalation, ETA, custody stamps, capture-time labels). `lastFeedTick`
+is the last received sensor packet; temperature, truck position, charts, PDF curves and the
+seal-photo/signature location stamps read it. The demo tray's **Telemetry gap** freezes
+`lastFeedTick` while `tick` continues, so every feed-derived view goes stale together and the
+readout says "Stale · last received HH:MM". Triggering an excursion refreshes the feed once; the
+two time jumps clear the gap. The driver evidence queue (offline toggle) is a separate channel
+from the sensor feed.
 
 ## Product bands
 
 `BandProfile` (`vaccine 2–8`, `blood 1–6`, `crt 15–25`, `frozen −30…−20`) owns the
 base/excursion/floor values, drift/decay rates, axis range/interval, product label and
-excursion title. The chart, readout bar and PDF painter all read the same profile. Switching
-bands from the demo tray previews the live feed and report band; captured records, checklist
-readings and timestamps are not rewritten. The canonical demo and the sample remain vaccine
-2–8.
+excursion title. The chart, readout bar and PDF painter all read the same profile. An
+`ExcursionEvent` stores the peak reading captured at detection; the alert, banner and PDF render
+that stored value, so a band preview cannot rewrite an incident. Switching bands from the demo
+tray previews the live feed and report band; captured records, checklist readings and timestamps
+are not rewritten. The canonical demo and the sample remain vaccine 2–8.
 
 ## Temperature math
 

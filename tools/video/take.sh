@@ -10,10 +10,10 @@ DEV_RAW="/sdcard/algor-take.mp4"
 RAW="$OUT/take-raw.mp4"
 PKG="$(sed -n 's/.*applicationId[[:space:]]*=[[:space:]]*"\(.*\)".*/\1/p' "$ROOT"/android/app/build.gradle* | head -1)"
 
-# Coordinates for 1080x1920, calibrated on the current build.
+# Coordinates for 1080x1920. Re-run `MODE=calibrate` after any UI change and update these.
 FOOTER_X=540;    FOOTER_Y=1800
-TRAY_RESET_X=132;   TRAY_RESET_Y=1364
-TRAY_TRIGGER_X=710; TRAY_TRIGGER_Y=1364
+TRAY_RESET_X=132;   TRAY_RESET_Y=864
+TRAY_TRIGGER_X=710; TRAY_TRIGGER_Y=864
 ROLE_DRIVER_X=540; ROLE_DRIVER_Y=865
 OFFLINE_X=960;   OFFLINE_Y=285
 ROW1_X=540; ROW1_Y=802
@@ -24,7 +24,6 @@ CONTINUE_X=660;  CONTINUE_Y=1680
 SCAN_X=540;      SCAN_Y=1333
 SEAL_CAPTURE_X=540; SEAL_CAPTURE_Y=1470
 SEAL_VERIFY_X=540;  SEAL_VERIFY_Y=1495
-SCRIM_X=540;     SCRIM_Y=300
 OVERLAY_CALL_X=540; OVERLAY_CALL_Y=1407
 CALL_CLOSE_X=540;   CALL_CLOSE_Y=1731
 OVERLAY_LOG_X=540;  OVERLAY_LOG_Y=1265
@@ -32,11 +31,12 @@ SAVE_ACK_X=540;     SAVE_ACK_Y=1669
 SIGN1_X1=400; SIGN1_Y1=1000; SIGN1_X2=700; SIGN1_Y2=860
 SIGN2_X1=430; SIGN2_Y1=1030; SIGN2_X2=760; SIGN2_Y2=930
 SIGN_MS=400
-DONE_X=660; DONE_Y=1174
+SIGN_SCROLL_FROM_Y=1500; SIGN_SCROLL_TO_Y=1050; SIGN_SCROLL_MS=350
+DONE_X=540; DONE_Y=1520
 VIEW_CLIENT_X=660; VIEW_CLIENT_Y=1680
 CLIENT_CARD_X=540; CLIENT_CARD_Y=630
 SCROLL_X=540; SCROLL_FROM_Y=1500; SCROLL_TO_Y=500; SCROLL_MS=400
-PDF_X=540; PDF_Y=1559
+PDF_X=540; PDF_Y=1500
 
 tap()  { "$ADB" shell input tap "$1" "$2" >/dev/null; }
 press() { "$ADB" shell input swipe "$1" "$2" "$1" "$2" 900 >/dev/null; }
@@ -103,15 +103,16 @@ calibrate() {
   tap "$SEAL_VERIFY_X" "$SEAL_VERIFY_Y"; sleep 1.2; shot 09-seal-verified
   tap "$CONTINUE_X" "$CONTINUE_Y"; sleep 1.2; shot 10-signature
   press "$FOOTER_X" "$FOOTER_Y"; sleep 1.4; shot 11-tray
-  tap "$TRAY_TRIGGER_X" "$TRAY_TRIGGER_Y"; sleep 0.6
-  tap "$SCRIM_X" "$SCRIM_Y"; sleep 1.2; shot 12-overlay
+  tap "$TRAY_TRIGGER_X" "$TRAY_TRIGGER_Y"; sleep 1.2; shot 12-overlay
   tap "$OVERLAY_CALL_X" "$OVERLAY_CALL_Y"; sleep 3.0; shot 13-call
   tap "$CALL_CLOSE_X" "$CALL_CLOSE_Y"; sleep 1.2; shot 14-after-call
   tap "$OVERLAY_LOG_X" "$OVERLAY_LOG_Y"; sleep 1.2; shot 15-log
   tap "$SAVE_ACK_X" "$SAVE_ACK_Y"; sleep 1.8; shot 16-acked
   tap "$OFFLINE_X" "$OFFLINE_Y"; sleep 1.5; shot 17-online
   swipe "$SIGN1_X1" "$SIGN1_Y1" "$SIGN1_X2" "$SIGN1_Y2" "$SIGN_MS"; sleep 0.3
-  swipe "$SIGN2_X1" "$SIGN2_Y1" "$SIGN2_X2" "$SIGN2_Y2" "$SIGN_MS"; sleep 0.8; shot 18-signed
+  swipe "$SIGN2_X1" "$SIGN2_Y1" "$SIGN2_X2" "$SIGN2_Y2" "$SIGN_MS"; sleep 0.5
+  swipe "$SCROLL_X" "$SIGN_SCROLL_FROM_Y" "$SCROLL_X" "$SIGN_SCROLL_TO_Y" "$SIGN_SCROLL_MS"
+  sleep 0.6; shot 18-signed
   tap "$DONE_X" "$DONE_Y"; sleep 1.2; shot 19-signed-card
   tap "$CONTINUE_X" "$CONTINUE_Y"; sleep 2.5; shot 20-confirm
   tap "$VIEW_CLIENT_X" "$VIEW_CLIENT_Y"; sleep 1.5; shot 21-client-list
@@ -150,7 +151,6 @@ run_take() {
   at 15.3; tap "$CONTINUE_X" "$CONTINUE_Y"
   at 16.5; press "$FOOTER_X" "$FOOTER_Y"
   at 17.8; tap "$TRAY_TRIGGER_X" "$TRAY_TRIGGER_Y"
-  at 18.2; tap "$SCRIM_X" "$SCRIM_Y"
   at 20.8; tap "$OVERLAY_CALL_X" "$OVERLAY_CALL_Y"
   at 23.6; tap "$CALL_CLOSE_X" "$CALL_CLOSE_Y"
   at 24.8; tap "$OVERLAY_LOG_X" "$OVERLAY_LOG_Y"
@@ -158,8 +158,9 @@ run_take() {
   at 27.8; tap "$OFFLINE_X" "$OFFLINE_Y"
   at 29.0; swipe "$SIGN1_X1" "$SIGN1_Y1" "$SIGN1_X2" "$SIGN1_Y2" "$SIGN_MS"
   at 29.4; swipe "$SIGN2_X1" "$SIGN2_Y1" "$SIGN2_X2" "$SIGN2_Y2" "$SIGN_MS"
-  at 30.0; tap "$DONE_X" "$DONE_Y"
-  at 31.2; tap "$CONTINUE_X" "$CONTINUE_Y"
+  at 29.8; swipe "$SCROLL_X" "$SIGN_SCROLL_FROM_Y" "$SCROLL_X" "$SIGN_SCROLL_TO_Y" "$SIGN_SCROLL_MS"
+  at 30.3; tap "$DONE_X" "$DONE_Y"
+  at 31.3; tap "$CONTINUE_X" "$CONTINUE_Y"
   at 35.8; tap "$VIEW_CLIENT_X" "$VIEW_CLIENT_Y"
   at 37.3; tap "$CLIENT_CARD_X" "$CLIENT_CARD_Y"
   at 38.7; swipe "$SCROLL_X" "$SCROLL_FROM_Y" "$SCROLL_X" "$SCROLL_TO_Y" "$SCROLL_MS"

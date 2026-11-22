@@ -36,6 +36,15 @@ class _ExcursionPushBannerState extends ConsumerState<ExcursionPushBanner> {
   }
 
   @override
+  void didUpdateWidget(covariant ExcursionPushBanner oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!widget.enabled && _visible) {
+      _timer?.cancel();
+      _visible = false;
+    }
+  }
+
+  @override
   void dispose() {
     _timer?.cancel();
     super.dispose();
@@ -111,7 +120,10 @@ class _ExcursionPushBannerState extends ConsumerState<ExcursionPushBanner> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  state.bandProfile.excursionTitle,
+                                  state.bandProfile.excursionTitleFor(
+                                    state.excursion?.reading ??
+                                        state.bandProfile.excursion,
+                                  ),
                                   style: const TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,

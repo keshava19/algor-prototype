@@ -437,7 +437,7 @@ pw.Widget _excursionTable(ScenarioState state) {
   }
   return _keyValueTable([
     ('Detected', '${formatClock(excursion.startedTick)} IST'),
-    ('Reading', '${state.bandProfile.excursion.toStringAsFixed(1)} °C'),
+    ('Reading', '${excursion.reading.toStringAsFixed(1)} °C'),
     ('Location', excursion.location),
     (
       'Acknowledged',

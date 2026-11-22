@@ -31,7 +31,7 @@ class _SealPhotoStepState extends ConsumerState<SealPhotoStep> {
     final state = ref.watch(scenarioControllerProvider);
     final controller = ref.read(scenarioControllerProvider.notifier);
     final theme = Theme.of(context);
-    final position = positionOnRoute(state.tick);
+    final position = positionOnRoute(state.lastFeedTick);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),

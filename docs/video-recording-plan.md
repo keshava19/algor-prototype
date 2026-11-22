@@ -28,8 +28,10 @@ Companion files: [`../tools/video/beats.ass`](../tools/video/beats.ass) (caption
 4. Launch the app and confirm `wm size` reports `1080x1920`.
 5. Calibrate once: walk the flow with `MODE=calibrate tools/video/take.sh`, read the
    screenshots in `build/video/cal/`, and correct the coordinate constants at the top of
-   `take.sh`. Run calibration twice; the second run starts from the delivered state (share
-   sheet open) and proves the reset/retake loop.
+   `take.sh`. **Recalibrate after any UI change** — the phase-8 demo tray (Network / Actions /
+   band / escalation) is scrollable and the signature step now places Done below the optional
+   delivery-note chips, so older constants are invalid. Run calibration twice; the second run
+   starts from the delivered state (share sheet open) and proves the reset/retake loop.
 6. Warm up: `MODE=dry tools/video/take.sh` runs the full choreography without recording. It
    validates every tap and caches the client-detail map tiles in-process. Do not kill the app
    between the dry run and the real take.
@@ -50,18 +52,18 @@ Companion files: [`../tools/video/beats.ass`](../tools/video/beats.ass) (caption
 | 14.3 | **Seal verified** (SL-2291 is pre-filled; the note is skipped) | 5 |
 | 15.3 | **Continue** to the signature step | 5 |
 | 16.5 | Long-press the footer (same-point swipe, 900 ms) | 6 |
-| 17.8 | **Trigger excursion** | 6 |
-| 18.2 | Tap the scrim to dismiss the tray; the overlay is revealed | 6 → 7 |
-| 18.4–20.8 | Hold on the overlay | 7 |
+| 17.8 | **Trigger excursion** — the tray closes itself and the push banner appears | 6 |
+| 18.4–20.8 | Hold on the overlay; the banner auto-dismisses about 22.8 | 7 |
 | 20.8 | **Call control room** | 8 |
 | 23.6 | **Close** (enabled after the 2 s ring; 0.8 s margin) | 8 |
 | 24.8 | **Log action** | 9 |
 | 26.0 | **Save acknowledgement** (Compressor reset is pre-selected) | 9 |
-| 27.8 | Offline switch **off**; the queue drains, last sync about 33.9 | 10 |
-| 29.0–29.9 | Two signature strokes (500 ms each) | 10 → 11 |
-| 30.0 | **Done** | 11 |
-| 31.0 | **Continue** to the confirm step | 11 → 12 |
-| 31.3–35.8 | Hold; the e-POD fires about 33.9 | 12 |
+| 27.8 | Offline switch **off**; the queue drains, last sync about 33.8 | 10 |
+| 29.0–29.4 | Two signature strokes (400 ms each) | 10 → 11 |
+| 29.8 | Scroll down to reveal the delivery-note chips and **Done** | 11 |
+| 30.3 | **Done** | 11 |
+| 31.3 | **Continue** to the confirm step | 11 → 12 |
+| 31.5–35.8 | Hold; the e-POD fires about 34.0 | 12 |
 | 35.8 | **View client view** | 12 → 13 |
 | 37.3 | Open the top shipment card | 13 |
 | 38.7, 40.1, 41.5, 42.9 | Four slow scrolls (over-scroll is harmless) | 13 |
@@ -119,9 +121,10 @@ After each take, extract these raw frames and read them:
 | --- | --- |
 | Raw 1.0 s | Role picker |
 | Raw 5.5 s | Checklist with the offline banner |
-| Raw 19.0 s | Excursion overlay at 8.9 °C |
+| Raw 19.0 s | Excursion overlay at 8.9 °C with the push banner still visible |
 | Raw 26.5 s | Signature step, overlay gone |
-| Raw 33.5 s | Confirm step with "e-POD generated" |
+| Raw 29.9 s | Signature drawn, delivery-note chips and Done revealed by the scroll |
+| Raw 33.5 s | Confirm step with "e-POD generated" and three synced event IDs |
 | Raw 44.8 s | Share sheet with `algor-field-audit-172-45678901.pdf` |
 | Rendered 50 s | Held share sheet, caption above the footer |
 | Rendered 58 s | Closing caption above the footer |
@@ -143,4 +146,4 @@ After rendering, check a caption frame (about 50 s) clears the button row and fo
 To perform the beats by hand (for example if the emulator automation is unavailable), follow
 the 60-second beats in [`demo-script.md`](demo-script.md) and the caption table above. Set the
 escalation countdown to **0:30** in the demo tray for manual pacing; the scripted take does not
-need it.
+need it. Remember that the signature step needs a small scroll before **Done** on short screens.

@@ -33,11 +33,14 @@ Be upfront with the viewer that the demo has a remote; it explains the time jump
 | Control | What it does |
 | --- | --- |
 | **Reset** | Returns to the role picker with a fresh 05:00 trip |
-| **Offline (dead zone)** | Toggles network loss; captures queue locally and sync one per second on reconnect |
+| **Offline (dead zone)** | Toggles network loss for driver evidence; captures queue locally and sync one per second on reconnect |
+| **Telemetry gap (stale feed)** | Freezes the sensor feed; the readout, map and chart show "last received" and a STALE badge |
 | **Start drift** | Starts a gradual temperature climb, slower than the excursion trigger |
-| **Trigger excursion** | Jumps the clock to 06:25 near Nashik and pins the reading at 8.9 °C |
+| **Trigger excursion** | Jumps the clock to 06:25 near Nashik, pins the reading at 8.9 °C, and closes the tray |
 | **Jump to out-for-delivery** | Jumps to 21:45 and opens the driver flow |
 | **Jump to delivered** | Loads the canonical delivered sample (21:48) and opens the client view |
+| **Fail next sync** | Arms a one-shot failure so the next queue promotion lands in `failed` and can be retried |
+| **Vaccine / blood / CRT / frozen** | Previews the live feed and report band; captured records are untouched |
 | **2:00 / 0:30** | Sets the escalation countdown length |
 
 ## Demo route (~5 minutes)
@@ -65,9 +68,9 @@ Be upfront with the viewer that the demo has a remote; it explains the time jump
 
 - Say **"every value is simulated"** up front and point at the concept footer once. It is on
   every screen and every PDF page on purpose.
-- Say the app **"supports GDP documentation"** and is **"audit-trail-backed"**. Never say
-  "compliant", "certified" or "tamper-proof".
-- The calls and the camera are simulated. Nothing connects to Algor systems.
+- Say the app **"supports GDP documentation"** and is **"audit-trail-backed"**. Never claim
+  certification, regulatory compliance or tamper resistance.
+- The calls, the SMS fallback and the camera are simulated. Nothing connects to Algor systems.
 
 ## The script
 
@@ -130,15 +133,16 @@ checklist rows while talking, then tap **Continue**.
 
 ### 2:05–3:05 — The emergency (excursion)
 
-**Do.** Long-press the footer, tap **Trigger excursion**, then swipe the tray down. The red
-overlay is already waiting.
+**Do.** Long-press the footer, tap **Trigger excursion**. The tray closes itself and the red
+overlay is already waiting, with a simulated push alert card at the top for five seconds.
 
 **Say.**
 
 > Full disclosure — I have a remote control: I long-pressed the footer to make something go
 > wrong on purpose. Six hours in, near Nashik, the truck's fridge fails: 8.9 degrees, outside
-> the safe band. The ring is a promise clock — if nobody responds in two minutes, the app
-> escalates to the control room by itself.
+> the safe band — and the phone gets an alert, the same way a push notification would arrive.
+> The ring is a promise clock — if nobody responds in two minutes, the app escalates to the
+> control room by itself.
 
 **Do.** Tap **Log action**, leave **Compressor reset** selected, type "Compressor restarted,
 set-point restored", and tap **Save acknowledgement**.
@@ -160,8 +164,8 @@ set-point restored", and tap **Save acknowledgement**.
 > drains: checklist, scan, seal photo, one by one. Now you are the pharmacist receiving the
 > medicine — sign with your finger.
 
-**Do.** After they sign, tap **Done**, then **Continue** to Step 5. Let the screen update
-itself.
+**Do.** After they sign, optionally add a **delivery note**, scroll if needed, then tap **Done**,
+then **Continue** to Step 5. Let the screen update itself.
 
 **Say.**
 
@@ -199,6 +203,17 @@ itself.
 
 - **Call control room:** from the alarm, show the simulated call (rings about two seconds,
   then Connected); the call is recorded in the diary.
+- **SMS fallback:** with **Offline** on, tap **SMS control room**; the button becomes "SMS sent
+  · GSM fallback" and the diary gains an entry — evidence that the weak-signal path works.
+- **Stale feed:** enable **Telemetry gap** in the tray. The reading, map and chart freeze; the
+  readout says "Stale · last received …", and the ops badge flips to STALE. Switch it off to
+  catch up.
+- **Failed sync:** offline, capture and sign, arm **Fail next sync**, then go online. One row
+  turns red with an event ID; the e-POD waits. Tap **Retry** in the capture queue and let it
+  finish.
+- **Band preview:** switch the tray to **CRT 15–25** or **Frozen -30 to -20**; the readout,
+  chart, client detail and PDF re-anchor, while the checklist keeps its captured readings.
+  Switch back to **Vaccine 2–8** before the canonical run.
 - **Escalation expiry:** set the tray countdown to **0:30**, stay silent; the alarm reads
   "Escalated — control room notified" and the diary gains an entry. Acknowledging still
   works.
