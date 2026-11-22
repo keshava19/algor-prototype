@@ -59,8 +59,8 @@ class ClientShipmentDetail extends ConsumerWidget {
             onPressed: () => context.go('/client'),
           ),
           IconButton(
-            icon: const Icon(Icons.home_outlined),
-            tooltip: 'Role picker',
+            icon: const Icon(Icons.swap_horiz),
+            tooltip: 'Switch role',
             onPressed: () => context.go('/'),
           ),
         ],

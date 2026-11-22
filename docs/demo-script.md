@@ -58,8 +58,8 @@ canonical run (excursion 06:25, ack 06:26, out for delivery 21:45, e-POD 21:48).
 ## 3-minute walkthrough
 
 1. **Control tower (20 s).** From the role picker open **Live Shipment Monitor**. Point out the
-   scenario clock, 4.2 °C readout, 2–8 °C band, route progress, ETA 22:45 and the custody
-   preview. "The same data the client sees, one clock."
+   FEED LIVE strip and scenario clock, 4.2 °C readout, 2–8 °C band, route progress, ETA 22:45
+   and the custody preview. "The same data the client sees, one clock."
 2. **Offline driver capture (50 s).** Open the driver flow, switch offline, confirm the
    checklist, scan the AWB (`172-45678901`), capture and verify the seal (`SL-2291`). Open the
    banner copy: "Offline mode: highway dead zone — 3 items queued, will sync."

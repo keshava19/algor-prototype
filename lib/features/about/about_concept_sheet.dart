@@ -63,6 +63,14 @@ class AboutConceptSheet extends StatelessWidget {
               'live operations stay untouched.',
               style: theme.textTheme.bodySmall,
             ),
+            const SizedBox(height: 12),
+            Text(
+              'Presenter tip — long-press the footer for scenario controls.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
+                fontStyle: FontStyle.italic,
+              ),
+            ),
             const SizedBox(height: 16),
             Align(
               alignment: Alignment.centerRight,

@@ -22,8 +22,8 @@ class ClientShipmentsScreen extends ConsumerWidget {
         title: const Text('Client QA view'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.home_outlined),
-            tooltip: 'Role picker',
+            icon: const Icon(Icons.swap_horiz),
+            tooltip: 'Switch role',
             onPressed: () => context.go('/'),
           ),
         ],

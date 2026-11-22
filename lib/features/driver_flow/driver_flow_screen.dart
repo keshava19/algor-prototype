@@ -82,8 +82,8 @@ class _DriverFlowScreenState extends ConsumerState<DriverFlowScreen> {
         title: const Text('Driver & e-POD'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.home_outlined),
-            tooltip: 'Role picker',
+            icon: const Icon(Icons.swap_horiz),
+            tooltip: 'Switch role',
             onPressed: () => context.go('/'),
           ),
         ],

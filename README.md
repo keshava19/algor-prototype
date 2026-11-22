@@ -10,10 +10,12 @@ fictional.
 
 ## What is inside
 
-- **Live Shipment Monitor** — scenario clock, temperature readout against a 2–8 °C band,
-  route map (Mumbai → Nashik → Dhule → Indore → Gwalior → Agra → Delhi), ETA, custody preview,
-  simulated driver call. The sensor feed can be marked stale from the demo tray; the readout,
-  map and chart freeze together and show "last received".
+- **Live Shipment Monitor** — a FEED LIVE/STALE/CLOSED strip with the scenario clock, temperature
+  readout against a 2–8 °C band, route map (Mumbai → Nashik → Dhule → Indore → Gwalior → Agra →
+  Delhi), ETA, expandable custody preview and a simulated driver call. An active excursion is
+  pinned as the first block with a primary **Call driver**; a resolved one leaves a last-alert
+  line. The sensor feed can be marked stale from the demo tray; the readout, map and chart freeze
+  together and show "last received".
 - **Driver & e-POD** — five-step stepper: pre-trip checklist with a photo on every row, AWB
   scan, geotagged seal photo, consignee signature with an optional delivery note, e-POD
   confirmation. **Done** lives in a sticky footer that becomes a live "N of 3 synced" count;

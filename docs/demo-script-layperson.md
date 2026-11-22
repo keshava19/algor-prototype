@@ -34,7 +34,7 @@ Be upfront with the viewer that the demo has a remote; it explains the time jump
 | --- | --- |
 | **Reset** | Returns to the role picker with a fresh 05:00 trip |
 | **Offline (dead zone)** | Toggles network loss for driver evidence; captures queue locally and sync one per second on reconnect |
-| **Telemetry gap (stale feed)** | Freezes the sensor feed; the readout, map and chart show "last received" and a STALE badge |
+| **Telemetry gap (stale feed)** | Freezes the sensor feed; the readout, map and chart show "last received" and the ops strip flips to FEED STALE |
 | **Start drift** | Starts a gradual temperature climb, slower than the excursion trigger |
 | **Trigger excursion** | Jumps the clock to 06:25 near Nashik, pins the reading at 8.9 °C, and closes the tray |
 | **Jump to out-for-delivery** | Jumps to 21:45 and opens the driver flow |
@@ -96,7 +96,7 @@ map.
 
 **Say.**
 
-> This is the company's air-traffic control — the red LIVE dot means the truck is being
+> This is the company's air-traffic control — the red FEED LIVE dot means the truck is being
 > watched right now, and every real second here is one minute of trip time. The reading is
 > 4.2 degrees, inside the green 2–8 band — fridge temperature — and the truck on the map is
 > due in Delhi at 22:45. The list below is the trip's diary: every event stamped with who and
@@ -207,8 +207,8 @@ share sheet with the filename `algor-field-audit-172-45678901.pdf`, and open the
 - **SMS fallback:** with **Offline** on, tap **SMS control room**; the button becomes "SMS sent
   · GSM fallback" and the diary gains an entry — evidence that the weak-signal path works.
 - **Stale feed:** enable **Telemetry gap** in the tray. The reading, map and chart freeze; the
-  readout says "Stale · last received …", and the ops badge flips to STALE. Switch it off to
-  catch up.
+  readout says "Stale · last received …", and the ops strip flips to FEED STALE. Switch it off
+  to catch up.
 - **Failed sync:** offline, capture and sign, arm **Fail next sync**, then go online. One row
   turns red with an event ID; the e-POD waits. Tap **Retry** in the capture queue and let it
   finish.

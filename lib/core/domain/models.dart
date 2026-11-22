@@ -122,6 +122,7 @@ final class ExcursionEvent {
   const ExcursionEvent({
     required this.startedTick,
     required this.reading,
+    required this.rangeLabel,
     required this.location,
     this.reasonCode,
     this.note,
@@ -131,6 +132,7 @@ final class ExcursionEvent {
 
   final int startedTick;
   final double reading;
+  final String rangeLabel;
   final String location;
   final String? reasonCode;
   final String? note;
@@ -145,6 +147,7 @@ final class ExcursionEvent {
   }) => ExcursionEvent(
     startedTick: startedTick,
     reading: reading,
+    rangeLabel: rangeLabel,
     location: location,
     reasonCode: reasonCode ?? this.reasonCode,
     note: note ?? this.note,

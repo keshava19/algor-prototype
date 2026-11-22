@@ -105,8 +105,16 @@ Controller: `build()` returns `ScenarioState.initial()`, starts a 1 Hz timer whe
 `Scaffold(body: Stack(routeChild, ExcursionOverlay, ExcursionPushBanner),
 bottomNavigationBar: ConceptFooter)`. The push banner fires on the
 driving→excursionActive transition (suppressed on `/client/sample`), auto-dismisses after
-5 s and is dismiss-only. Footer long-press opens the demo tray. Every non-root app bar has a
-home icon returning to `/`.
+5 s and is dismiss-only. Footer long-press opens the demo tray. Every non-root app bar offers a
+**Switch role** action returning to `/`.
+
+## Ops monitor
+
+Read-only and single-trip. The header is a feed strip (FEED LIVE / FEED STALE / FEED CLOSED, the
+scenario clock, and a last-received or delivered stamp). While an excursion is active the alert is
+the first block, showing the detected reading and band with a full-width danger **Call driver**
+primary; once resolved a "Last alert HH:MM · X.X °C · acknowledged" line keeps the incident
+visible. Calls placed from ops are recorded with source "Control room". (D67, D68)
 
 ## Shared widget contracts
 

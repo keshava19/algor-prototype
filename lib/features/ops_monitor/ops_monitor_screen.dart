@@ -21,6 +21,8 @@ class OpsMonitorScreen extends ConsumerWidget {
     final state = ref.watch(scenarioControllerProvider);
     final theme = Theme.of(context);
     final excursion = state.excursion;
+    final active = state.phase == TripPhase.excursionActive;
+    final delivered = state.phase == TripPhase.delivered;
     final distanceKm = (state.lastFeedTick / totalTripMinutes * 1405).clamp(
       0,
       1405,
@@ -28,19 +30,28 @@ class OpsMonitorScreen extends ConsumerWidget {
     final recentCustody = state.custody.length <= 4
         ? state.custody
         : state.custody.sublist(state.custody.length - 4);
-    final badge = state.phase == TripPhase.delivered
-        ? (label: 'CLOSED', color: AppColors.success, icon: Icons.check_circle)
+    final badge = delivered
+        ? (
+            label: 'FEED CLOSED',
+            color: AppColors.success,
+            icon: Icons.check_circle,
+          )
         : state.telemetryGap
-        ? (label: 'STALE', color: AppColors.queued, icon: Icons.wifi_off)
-        : (label: 'LIVE', color: AppColors.danger, icon: Icons.circle);
+        ? (label: 'FEED STALE', color: AppColors.queued, icon: Icons.wifi_off)
+        : (label: 'FEED LIVE', color: AppColors.danger, icon: Icons.circle);
+    final stamp = delivered
+        ? 'delivered ${formatClock(state.epod?.deliveredTick ?? state.tick)}'
+        : state.telemetryGap
+        ? 'last received ${formatClock(state.lastFeedTick)}'
+        : null;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Live shipment monitor'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.home_outlined),
-            tooltip: 'Role picker',
+            icon: const Icon(Icons.swap_horiz),
+            tooltip: 'Switch role',
             onPressed: () => context.go('/'),
           ),
         ],
@@ -48,39 +59,49 @@ class OpsMonitorScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: badge.color.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Row(
-                  children: [
-                    Icon(badge.icon, size: 9, color: badge.color),
-                    const SizedBox(width: 6),
-                    Text(
-                      badge.label,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: badge.color,
-                        letterSpacing: 0.6,
-                      ),
-                    ),
-                  ],
-                ),
+          if (active && excursion != null) ...[
+            _ExcursionBanner(
+              phase: state.phase,
+              excursion: excursion,
+              onCallDriver: () => showCallSheet(
+                context,
+                title: 'Driver · $driverName',
+                subtitle: '$vehiclePlate · simulated call',
+                custodyTitle: 'Driver called',
+                custodySource: custodySourceControlRoom,
               ),
-              const Spacer(),
-              Text(
-                '$scenarioDateLabel · ${formatClock(state.tick)} IST',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                ),
-              ),
-            ],
+            ),
+            const SizedBox(height: 12),
+          ],
+          _FeedStrip(
+            label: badge.label,
+            color: badge.color,
+            icon: badge.icon,
+            clockLabel: '$scenarioDateLabel · ${formatClock(state.tick)} IST',
+            stamp: stamp,
           ),
+          if (!active && excursion != null) ...[
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                const Icon(
+                  Icons.notifications_none,
+                  size: 14,
+                  color: AppColors.queued,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'Last alert ${formatClock(excursion.startedTick)} · '
+                    '${excursion.reading.toStringAsFixed(1)} °C · acknowledged',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: 12),
           Card(
             child: Padding(
@@ -121,14 +142,12 @@ class OpsMonitorScreen extends ConsumerWidget {
                     celsius: state.currentTemperature,
                     band: state.bandProfile,
                     phase: state.phase,
-                    stale:
-                        state.telemetryGap &&
-                        state.phase != TripPhase.delivered,
+                    stale: state.telemetryGap && !delivered,
                     sourceLabel: formatFeedLabel(
                       lastFeedTick: state.lastFeedTick,
                       nowTick: state.tick,
                       stale: state.telemetryGap,
-                      finalRecord: state.phase == TripPhase.delivered,
+                      finalRecord: delivered,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -168,10 +187,10 @@ class OpsMonitorScreen extends ConsumerWidget {
           const SizedBox(height: 12),
           MapPanel(
             truckPosition: ref.watch(truckPositionProvider),
-            isExcursion: state.phase == TripPhase.excursionActive,
+            isExcursion: active,
             height: 230,
           ),
-          if (excursion != null) ...[
+          if (!active && excursion != null) ...[
             const SizedBox(height: 12),
             _ExcursionBanner(
               phase: state.phase,
@@ -281,6 +300,70 @@ class OpsMonitorScreen extends ConsumerWidget {
   }
 }
 
+class _FeedStrip extends StatelessWidget {
+  const _FeedStrip({
+    required this.label,
+    required this.color,
+    required this.icon,
+    required this.clockLabel,
+    this.stamp,
+  });
+
+  final String label;
+  final Color color;
+  final IconData icon;
+  final String clockLabel;
+  final String? stamp;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceRaised,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 9, color: color),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: color,
+              letterSpacing: 0.6,
+            ),
+          ),
+          if (stamp != null) ...[
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                stamp!,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+                ),
+              ),
+            ),
+          ] else
+            const Spacer(),
+          Text(
+            clockLabel,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ExcursionBanner extends StatelessWidget {
   const _ExcursionBanner({
     required this.phase,
@@ -337,6 +420,15 @@ class _ExcursionBanner extends StatelessWidget {
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
+            const SizedBox(height: 2),
+            Text(
+              '${excursion.reading.toStringAsFixed(1)} °C — outside the '
+              '${excursion.rangeLabel} °C band',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             if (!active) ...[
               const SizedBox(height: 4),
               Text(
@@ -349,10 +441,15 @@ class _ExcursionBanner extends StatelessWidget {
               ),
             ],
             if (active) ...[
-              const SizedBox(height: 8),
-              OutlinedButton.icon(
+              const SizedBox(height: 10),
+              FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.danger,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size.fromHeight(44),
+                ),
                 onPressed: onCallDriver,
-                icon: const Icon(Icons.phone_outlined, size: 16),
+                icon: const Icon(Icons.phone_outlined, size: 18),
                 label: const Text('Call driver'),
               ),
             ],

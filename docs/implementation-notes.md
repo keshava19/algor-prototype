@@ -28,6 +28,7 @@ the code, and **decision references**.
 | 15 | Provider-free shared widgets | Constructor-only data; two sanctioned provider exceptions | D9 |
 | 16 | Action and sync feedback hidden below the fold | Sticky Done footer that becomes the capture status; auto-advance on e-POD | D34, D35, D60, D61, D62, D63 |
 | 17 | Report access below the fold and anonymous custody | App-bar PDF action, delivery-pack header, expandable provenance rows | D64, D65, D66 |
+| 18 | Ops alerts and role switching buried | Alert pinned first, feed strip, last-alert line, Switch role action | D67, D68, D69, D70 |
 
 ## Time, determinism and testability
 
@@ -417,6 +418,24 @@ pack card) · `lib/core/domain/models.dart` · `lib/core/scenario/scenario_state
 `lib/shared/widgets/temp_readout.dart` (`showChip`).
 
 **Decisions.** D64, D65, D66.
+
+### 22. An ops screen that leads with the alert
+
+**Problem.** The ops monitor is deliberately read-only and single-truck, but the alert sat below
+the map, feed health lived in a small badge, a resolved incident vanished from the top of the
+screen, and the only way back to the role picker was an unlabelled home icon.
+
+**Resolution.** While an excursion is active the banner is the first element, showing the
+reading and band captured at detection, with a full-width danger Call driver. The header became a
+FEED LIVE/STALE/CLOSED strip carrying the clock and a last-received or delivered stamp; a resolved
+excursion leaves a compact last-alert line rendered from the stored reading. Every deep app bar now
+exposes a Switch role action, and the About sheet closes with a muted presenter tip.
+
+**Where.** `lib/features/ops_monitor/ops_monitor_screen.dart` (`_FeedStrip`, `_ExcursionBanner`) ·
+the four app bars · `lib/features/about/about_concept_sheet.dart` ·
+`lib/core/domain/models.dart` (`ExcursionEvent.rangeLabel`).
+
+**Decisions.** D67, D68, D69, D70.
 
 ## Amendment trail
 
