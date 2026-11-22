@@ -38,6 +38,15 @@ excursionActive (expiry sets `escalated`) → evaluate auto e-POD rule.
 Initial state: tick 45 (05:00), lastFeedTick 45, phase driving, vaccine band, custody
 `[Dispatched · 04:15 · Mumbai (BOM)]`.
 
+## Driver stepper
+
+Five `PageView` pages: checklist → AWB scan → seal photo → signature → confirm. Continue is
+gated per step, Back returns, and swipe is disabled. The signature page keeps a sticky footer:
+**Done** while the signature is open, then "Signature captured · N of 3 synced" with an inline
+Retry when a promotion fails. When the e-POD exists the screen advances to the confirm step by
+itself; Continue and Back remain for manual navigation. Checklist rows carry a concept thumbnail
+and the hint names the tap interaction. (D34 amended, D35 amended, D60–D63)
+
 ## Scenario state fields
 
 `tick`, `lastFeedTick`, `telemetryGap`, `phase`, `band`, `checklist` (4 confirmed flags),

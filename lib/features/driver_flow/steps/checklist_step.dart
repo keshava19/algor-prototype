@@ -6,6 +6,13 @@ import '../../../core/scenario/providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/util/formatters.dart';
 
+const _checklistThumbs = <String>[
+  'assets/images/precool_reefer.png',
+  'assets/images/logger_armed.png',
+  'assets/images/reefer_door_seal.png',
+  'assets/images/reefer_clean.png',
+];
+
 class ChecklistStep extends ConsumerWidget {
   const ChecklistStep({super.key});
 
@@ -26,8 +33,8 @@ class ChecklistStep extends ConsumerWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'Completed before dispatch. Every row is stamped with user and '
-          'time when confirmed.',
+          'Tap each row to confirm it before dispatch. Every confirmation is '
+          'stamped with user and time.',
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
           ),
@@ -44,18 +51,16 @@ class ChecklistStep extends ConsumerWidget {
                   padding: const EdgeInsets.all(12),
                   child: Row(
                     children: [
-                      if (index == 0) ...[
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.asset(
-                            'assets/images/precool_reefer.png',
-                            width: 56,
-                            height: 56,
-                            fit: BoxFit.cover,
-                          ),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.asset(
+                          _checklistThumbs[index],
+                          width: 56,
+                          height: 56,
+                          fit: BoxFit.cover,
                         ),
-                        const SizedBox(width: 12),
-                      ],
+                      ),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

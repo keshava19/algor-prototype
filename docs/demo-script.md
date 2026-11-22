@@ -28,8 +28,8 @@ throughout.
 | 5–16 s | Checklist | Toggle **Offline (dead zone)** on. Confirm the four rows (pre-cooled 4.0 °C, logger armed, seal intact, reefer clean). Tap **Continue**. |
 | 16–22 s | Scan + seal | Tap **Tap to scan** (1.2 s animation), **Continue**; tap **Capture seal photo**, **Seal verified**, **Continue**. The banner now reads "3 items queued, will sync". |
 | 22–32 s | Excursion | Long-press the footer → **Trigger excursion**. Overlay: "Reefer 8.9 °C — outside 2–8 °C band · Near Nashik hub · MH 04 KF 4001". Tap **Call control room** (rings 2 s → Connected → Close); tap **Log action**, choose **Compressor reset**, add "Compressor restarted, set-point restored", save. |
-| 32–40 s | Recovery + signature | Toggle offline **off**. The three queued items sync one per second. Sign on the pad, tap **Done**. |
-| 40–46 s | e-POD | **Continue** → "e-POD generated". **Continue** → **View client view**. |
+| 32–40 s | Recovery + signature | Toggle offline **off**. The three queued items sync one per second. Sign on the pad — **Done** is always in the sticky footer — and tap **Done**. The footer counts the syncs. |
+| 40–46 s | e-POD | The footer reaches 3 of 3; the screen advances itself to "e-POD generated". Tap **View client view**. |
 | 46–56 s | Client QA | Live shipment: temperature curve, excursion acknowledged card, custody trail. Scroll to **Download audit PDF**; show the share sheet and filename `algor-field-audit-172-45678901.pdf`. |
 | 56–60 s | Close | Say: "One Flutter codebase on top of your existing tracking data. Happy to walk Nitesh's team through the integration approach in 15 minutes." |
 

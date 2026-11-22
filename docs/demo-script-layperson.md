@@ -164,8 +164,9 @@ set-point restored", and tap **Save acknowledgement**.
 > drains: checklist, scan, seal photo, one by one. Now you are the pharmacist receiving the
 > medicine — sign with your finger.
 
-**Do.** After they sign, optionally add a **delivery note**, scroll if needed, then tap **Done**,
-then **Continue** to Step 5. Let the screen update itself.
+**Do.** After they sign, optionally add a **delivery note**, then tap **Done** — it is always in
+the sticky footer, no scrolling. The footer counts the captures syncing, and the screen advances
+to Step 5 by itself when the e-POD is ready.
 
 **Say.**
 

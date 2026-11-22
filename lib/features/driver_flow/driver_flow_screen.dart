@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/domain/fictional_data.dart';
+import '../../core/domain/models.dart';
 import '../../core/scenario/providers.dart';
 import '../../core/scenario/scenario_state.dart';
 import '../../core/theme/app_theme.dart';
@@ -37,6 +38,16 @@ class _DriverFlowScreenState extends ConsumerState<DriverFlowScreen> {
     _ => true,
   };
 
+  void _goToStep(int step) {
+    if (!mounted) return;
+    setState(() => _step = step);
+    _pageController.animateToPage(
+      step,
+      duration: const Duration(milliseconds: 260),
+      curve: Curves.easeOut,
+    );
+  }
+
   void _continue(ScenarioState state) {
     final controller = ref.read(scenarioControllerProvider.notifier);
     if (_step == 0) controller.completeChecklist();
@@ -44,22 +55,12 @@ class _DriverFlowScreenState extends ConsumerState<DriverFlowScreen> {
       context.go('/client');
       return;
     }
-    setState(() => _step += 1);
-    _pageController.animateToPage(
-      _step,
-      duration: const Duration(milliseconds: 260),
-      curve: Curves.easeOut,
-    );
+    _goToStep(_step + 1);
   }
 
   void _back() {
     if (_step == 0) return;
-    setState(() => _step -= 1);
-    _pageController.animateToPage(
-      _step,
-      duration: const Duration(milliseconds: 260),
-      curve: Curves.easeOut,
-    );
+    _goToStep(_step - 1);
   }
 
   @override
@@ -67,6 +68,14 @@ class _DriverFlowScreenState extends ConsumerState<DriverFlowScreen> {
     final state = ref.watch(scenarioControllerProvider);
     final controller = ref.read(scenarioControllerProvider.notifier);
     final theme = Theme.of(context);
+    final awaitingSignature = _step == 3 && state.signature == null;
+
+    ref.listen(scenarioControllerProvider, (previous, next) {
+      final justDelivered =
+          previous?.phase != TripPhase.delivered &&
+          next.phase == TripPhase.delivered;
+      if (justDelivered && _step == 3) _goToStep(4);
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -161,14 +170,15 @@ class _DriverFlowScreenState extends ConsumerState<DriverFlowScreen> {
                 if (_step > 0)
                   OutlinedButton(onPressed: _back, child: const Text('Back')),
                 if (_step > 0) const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: _canContinue(state)
-                        ? () => _continue(state)
-                        : null,
-                    child: Text(_step == 4 ? 'View client view' : 'Continue'),
+                if (!awaitingSignature)
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: _canContinue(state)
+                          ? () => _continue(state)
+                          : null,
+                      child: Text(_step == 4 ? 'View client view' : 'Continue'),
+                    ),
                   ),
-                ),
               ],
             ),
           ),

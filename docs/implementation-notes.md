@@ -26,6 +26,7 @@ the code, and **decision references**.
 | 13 | Artwork when image generation was unavailable | Programmatic PIL artwork at the planned asset paths | D30 |
 | 14 | Strict analysis with zero comments or suppressions | Modern idioms adopted up front; registry as documentation | D29, D44 |
 | 15 | Provider-free shared widgets | Constructor-only data; two sanctioned provider exceptions | D9 |
+| 16 | Action and sync feedback hidden below the fold | Sticky Done footer that becomes the capture status; auto-advance on e-POD | D34, D35, D60, D61, D62, D63 |
 
 ## Time, determinism and testability
 
@@ -370,6 +371,29 @@ note; the client and PDF surface logger calibration, ETA and DPDP-aligned design
 
 **Decisions.** D21 (amended), D53, D54, D55, D56, D57, D59.
 
+## Post-review concept polish (D60–D71)
+
+### 20. Post-signature feedback without scrolling
+
+**Problem.** Done lived below the delivery-note chips, so shorter screens needed a scroll before
+the driver could commit, and the sync count was only visible after advancing to the confirm step.
+The review called both the top pilot friction.
+
+**Resolution.** The signature step became a `Column` with a scrollable body and a sticky footer.
+While the signature is open the footer is a full-width **Done**; after capture the same footer
+reads "Signature captured · N of 3 synced", turns red with "Sync failed" and an inline Retry when
+a promotion fails, and gives way to the auto-advance once the e-POD exists. The screen-level
+primary hides until the signature is captured, and a `ref.listen` transition advances the stepper
+on delivery. All four checklist rows gained 56 px thumbnails so the evidence story is consistent,
+and the hint now names the tap.
+
+**Where.** `lib/features/driver_flow/steps/signature_step.dart` (`_SignatureFooter`) ·
+`lib/features/driver_flow/driver_flow_screen.dart` (`_goToStep`, `ref.listen`) ·
+`lib/features/driver_flow/steps/checklist_step.dart` ·
+`assets/images/logger_armed.png` · `assets/images/reefer_clean.png`.
+
+**Decisions.** D34 (amended), D35 (amended), D60, D61, D62, D63.
+
 ## Amendment trail
 
 Registry entries that changed during execution, kept here so the history is easy to audit.
@@ -386,6 +410,8 @@ Registry entries that changed during execution, kept here so the history is easy
 | D22 | Band rendering moved to fl_chart 1.3 `HorizontalRangeAnnotation`; axis made band-relative |
 | D27 | Font licence corrected to Apache-2.0; two-page layout |
 | D28 | PDF generation test added to the smoke suite |
+| D34 | Every checklist row carries a thumbnail (D63) |
+| D35 | Stepper auto-advances to the confirm step on e-POD generation (D62) |
 | D38 | SMS fallback added beside the simulated call |
 | D43 | Compact 10–13 px metadata labels allowed; single 36 px display readout |
 | D48–D59 | v2 alignment: feed clock, push banner, SMS, event IDs, retry, bands, calibration, ETA, delivery note, DPDP copy, stored excursion reading |

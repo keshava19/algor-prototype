@@ -14,11 +14,13 @@ fictional.
   route map (Mumbai → Nashik → Dhule → Indore → Gwalior → Agra → Delhi), ETA, custody preview,
   simulated driver call. The sensor feed can be marked stale from the demo tray; the readout,
   map and chart freeze together and show "last received".
-- **Driver & e-POD** — five-step stepper: pre-trip checklist, AWB scan, geotagged seal photo,
-  consignee signature with an optional delivery note, e-POD confirmation. Offline captures
-  queue locally with unique event IDs and sync one item per second when connectivity returns;
-  a sync can fail and be retried from the queue. The e-POD generates automatically once the
-  signature is captured, the device is online, and all three captures are synced.
+- **Driver & e-POD** — five-step stepper: pre-trip checklist with a photo on every row, AWB
+  scan, geotagged seal photo, consignee signature with an optional delivery note, e-POD
+  confirmation. **Done** lives in a sticky footer that becomes a live "N of 3 synced" count;
+  when the e-POD generates, the screen advances itself. Offline captures queue locally with
+  unique event IDs and sync one item per second when connectivity returns; a sync can fail and
+  be retried inline or from the queue. The e-POD generates automatically once the signature is
+  captured, the device is online, and all three captures are synced.
 - **Excursion response** — simulated push alert, overlay pinned at 8.9 °C, countdown to
   escalation, Acknowledge / Log action / Call control room / one-tap SMS fallback.
   Acknowledging starts the decay back into the band; escalation still allows acknowledgement.

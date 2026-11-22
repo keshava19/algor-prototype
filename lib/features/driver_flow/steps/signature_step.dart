@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:signature/signature.dart';
 
 import '../../../core/domain/fictional_data.dart';
+import '../../../core/domain/models.dart';
 import '../../../core/domain/route.dart';
 import '../../../core/scenario/providers.dart';
 import '../../../core/theme/app_theme.dart';
@@ -69,6 +70,16 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
         .captureSignature(bytes, name, deliveryNote: _resolvedNote);
   }
 
+  void _retryFailed(List<QueueItem> queue) {
+    final controller = ref.read(scenarioControllerProvider.notifier);
+    final failed = queue
+        .where((item) => item.status == QueueItemStatus.failed)
+        .toList();
+    for (final item in failed) {
+      controller.retryItem(item.eventId);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(scenarioControllerProvider);
@@ -76,135 +87,222 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
     final position = positionOnRoute(state.lastFeedTick);
     final captured = state.signature;
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+    return Column(
       children: [
-        Text(
-          'Consignee signature',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          '${formatCoordinate(position.lat, position.lng)} · '
-          '${formatClock(state.tick)} IST',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-          ),
-        ),
-        const SizedBox(height: 12),
-        if (captured == null) ...[
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Signature(
-              controller: _signatureController,
-              height: 200,
-              backgroundColor: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             children: [
-              OutlinedButton(
-                onPressed: _signatureController.clear,
-                child: const Text('Clear'),
+              Text(
+                'Consignee signature',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _nameController,
-            decoration: const InputDecoration(
-              labelText: 'Consignee name',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 14),
-          Text(deliveryNoteLabel, style: theme.textTheme.labelLarge),
-          const SizedBox(height: 6),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              ChoiceChip(
-                label: const Text(deliveryNoteNoneLabel),
-                selected: _deliveryNote == null,
-                onSelected: (_) => setState(() => _deliveryNote = null),
+              const SizedBox(height: 4),
+              Text(
+                '${formatCoordinate(position.lat, position.lng)} · '
+                '${formatClock(state.tick)} IST',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
               ),
-              for (final option in deliveryNoteOptions)
-                ChoiceChip(
-                  label: Text(option),
-                  selected: _deliveryNote == option,
-                  onSelected: (_) => setState(() {
-                    _deliveryNote = option;
-                    _noteController.clear();
-                  }),
+              const SizedBox(height: 12),
+              if (captured == null) ...[
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Signature(
+                    controller: _signatureController,
+                    height: 200,
+                    backgroundColor: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    OutlinedButton(
+                      onPressed: _signatureController.clear,
+                      child: const Text('Clear'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Consignee name',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(deliveryNoteLabel, style: theme.textTheme.labelLarge),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    ChoiceChip(
+                      label: const Text(deliveryNoteNoneLabel),
+                      selected: _deliveryNote == null,
+                      onSelected: (_) => setState(() => _deliveryNote = null),
+                    ),
+                    for (final option in deliveryNoteOptions)
+                      ChoiceChip(
+                        label: Text(option),
+                        selected: _deliveryNote == option,
+                        onSelected: (_) => setState(() {
+                          _deliveryNote = option;
+                          _noteController.clear();
+                        }),
+                      ),
+                  ],
+                ),
+                if (_isOther) ...[
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: _noteController,
+                    minLines: 1,
+                    maxLines: 3,
+                    onChanged: (_) => setState(() {}),
+                    decoration: const InputDecoration(
+                      labelText: 'Note (required)',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ],
+              ] else
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.check_circle,
+                              color: AppColors.success,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Signed by ${captured.name} at '
+                              '${formatClock(captured.tick)}',
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                          ],
+                        ),
+                        if (captured.deliveryNote != null) ...[
+                          const SizedBox(height: 6),
+                          Text(
+                            'Delivery note: ${captured.deliveryNote}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.7,
+                              ),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 10),
+                        Image.memory(captured.bytes, height: 70),
+                      ],
+                    ),
+                  ),
                 ),
             ],
           ),
-          if (_isOther) ...[
-            const SizedBox(height: 10),
-            TextField(
-              controller: _noteController,
-              minLines: 1,
-              maxLines: 3,
-              onChanged: (_) => setState(() {}),
-              decoration: const InputDecoration(
-                labelText: 'Note (required)',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-          const SizedBox(height: 14),
-          FilledButton(
-            onPressed: _canDone ? _done : null,
-            child: const Text('Done'),
-          ),
-        ] else
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.check_circle,
-                        color: AppColors.success,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Signed by ${captured.name} at '
-                        '${formatClock(captured.tick)}',
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                    ],
-                  ),
-                  if (captured.deliveryNote != null) ...[
-                    const SizedBox(height: 6),
-                    Text(
-                      'Delivery note: ${captured.deliveryNote}',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.7,
-                        ),
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 10),
-                  Image.memory(captured.bytes, height: 70),
-                ],
-              ),
-            ),
-          ),
+        ),
+        _SignatureFooter(
+          captured: captured,
+          canDone: _canDone,
+          queue: state.queue,
+          isOffline: state.isOffline,
+          onDone: _done,
+          onRetry: () => _retryFailed(state.queue),
+        ),
       ],
+    );
+  }
+}
+
+class _SignatureFooter extends StatelessWidget {
+  const _SignatureFooter({
+    required this.captured,
+    required this.canDone,
+    required this.queue,
+    required this.isOffline,
+    required this.onDone,
+    required this.onRetry,
+  });
+
+  final CapturedSignature? captured;
+  final bool canDone;
+  final List<QueueItem> queue;
+  final bool isOffline;
+  final VoidCallback onDone;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final synced = queue
+        .where((item) => item.status == QueueItemStatus.synced)
+        .length;
+    final failed = queue
+        .where((item) => item.status == QueueItemStatus.failed)
+        .length;
+    final color = failed > 0
+        ? AppColors.danger
+        : synced == queue.length
+        ? AppColors.success
+        : isOffline
+        ? AppColors.queued
+        : AppColors.cyan;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceRaised,
+        border: Border(
+          top: BorderSide(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
+          ),
+        ),
+      ),
+      child: captured == null
+          ? FilledButton(
+              onPressed: canDone ? onDone : null,
+              child: const Text('Done'),
+            )
+          : Row(
+              children: [
+                Icon(
+                  failed > 0 ? Icons.error_outline : Icons.sync,
+                  size: 16,
+                  color: color,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    failed > 0
+                        ? 'Sync failed'
+                        : 'Signature captured · $synced of '
+                              '${queue.length} synced',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: failed > 0 ? AppColors.danger : null,
+                    ),
+                  ),
+                ),
+                if (failed > 0)
+                  TextButton(onPressed: onRetry, child: const Text('Retry')),
+              ],
+            ),
     );
   }
 }

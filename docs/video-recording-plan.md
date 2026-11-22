@@ -29,8 +29,8 @@ Companion files: [`../tools/video/beats.ass`](../tools/video/beats.ass) (caption
 5. Calibrate once: walk the flow with `MODE=calibrate tools/video/take.sh`, read the
    screenshots in `build/video/cal/`, and correct the coordinate constants at the top of
    `take.sh`. **Recalibrate after any UI change** — the phase-8 demo tray (Network / Actions /
-   band / escalation) is scrollable and the signature step now places Done below the optional
-   delivery-note chips, so older constants are invalid. Run calibration twice; the second run
+   band / escalation) is scrollable and the signature step keeps Done in a sticky footer, so
+   older constants are invalid. Run calibration twice; the second run
    starts from the delivered state (share sheet open) and proves the reset/retake loop.
 6. Warm up: `MODE=dry tools/video/take.sh` runs the full choreography without recording. It
    validates every tap and caches the client-detail map tiles in-process. Do not kill the app
@@ -60,10 +60,8 @@ Companion files: [`../tools/video/beats.ass`](../tools/video/beats.ass) (caption
 | 26.0 | **Save acknowledgement** (Compressor reset is pre-selected) | 9 |
 | 27.8 | Offline switch **off**; the queue drains, last sync about 33.8 | 10 |
 | 29.0–29.4 | Two signature strokes (400 ms each) | 10 → 11 |
-| 29.8 | Scroll down to reveal the delivery-note chips and **Done** | 11 |
-| 30.3 | **Done** | 11 |
-| 31.3 | **Continue** to the confirm step | 11 → 12 |
-| 31.5–35.8 | Hold; the e-POD fires about 34.0 | 12 |
+| 29.8 | **Done** — sticky footer, no scroll | 11 |
+| 29.8–35.8 | Hold; the footer counts 1→3 of 3 synced, the e-POD fires about 34.0, and the screen advances itself about 34.3 | 12 |
 | 35.8 | **View client view** | 12 → 13 |
 | 37.3 | Open the top shipment card | 13 |
 | 38.7, 40.1, 41.5, 42.9 | Four slow scrolls (over-scroll is harmless) | 13 |
@@ -85,8 +83,8 @@ Companion files: [`../tools/video/beats.ass`](../tools/video/beats.ass) (caption
 | 8 | 21.0 → 23.6 | Every call lands in the audit trail. |
 | 9 | 24.6 → 26.6 | Log the fix — who, when, what was done. |
 | 10 | 27.8 → 29.8 | Back in signal — the captures sync one by one. |
-| 11 | 29.9 → 31.6 | The receiver signs on the device. |
-| 12 | 32.0 → 35.8 | No "delivered" button — the e-POD closes itself. |
+| 11 | 29.9 → 33.4 | The receiver signs on the device. |
+| 12 | 33.6 → 35.8 | No "delivered" button — the e-POD closes itself. |
 | 13 | 36.3 → 44.0 | The client sees everything the driver captured. |
 | 14 | 44.4 → 48.0 | One tap — the full audit PDF. |
 | 15 | 48.5 → 59.95 | One Flutter codebase, built on your tracking data. |
@@ -123,8 +121,8 @@ After each take, extract these raw frames and read them:
 | Raw 5.5 s | Checklist with the offline banner |
 | Raw 19.0 s | Excursion overlay at 8.9 °C with the push banner still visible |
 | Raw 26.5 s | Signature step, overlay gone |
-| Raw 29.9 s | Signature drawn, delivery-note chips and Done revealed by the scroll |
-| Raw 33.5 s | Confirm step with "e-POD generated" and three synced event IDs |
+| Raw 29.9 s | Signature drawn; Done in the sticky footer, no scroll |
+| Raw 34.5 s | Confirm step with "e-POD generated" and three synced event IDs |
 | Raw 44.8 s | Share sheet with `algor-field-audit-172-45678901.pdf` |
 | Rendered 50 s | Held share sheet, caption above the footer |
 | Rendered 58 s | Closing caption above the footer |
@@ -146,4 +144,5 @@ After rendering, check a caption frame (about 50 s) clears the button row and fo
 To perform the beats by hand (for example if the emulator automation is unavailable), follow
 the 60-second beats in [`demo-script.md`](demo-script.md) and the caption table above. Set the
 escalation countdown to **0:30** in the demo tray for manual pacing; the scripted take does not
-need it. Remember that the signature step needs a small scroll before **Done** on short screens.
+need it. **Done** lives in the sticky footer of the signature step on every screen height, so no
+scroll is needed before committing the signature.
