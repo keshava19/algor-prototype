@@ -74,10 +74,10 @@ from the sensor feed.
 `BandProfile` (`vaccine 2–8`, `blood 1–6`, `crt 15–25`, `frozen −30…−20`) owns the
 base/excursion/floor values, drift/decay rates, axis range/interval, product label and
 excursion title. The chart, readout bar and PDF painter all read the same profile. An
-`ExcursionEvent` stores the peak reading captured at detection; the alert, banner and PDF render
-that stored value, so a band preview cannot rewrite an incident. Switching bands from the demo
-tray previews the live feed and report band; captured records, checklist readings and timestamps
-are not rewritten. The canonical demo and the sample remain vaccine 2–8.
+`ExcursionEvent` stores the peak reading and band label captured at detection; the alert, banner
+and PDF render that stored value, so a band preview cannot rewrite an incident. Switching bands
+from the demo tray previews the live feed and report band; captured records, checklist readings
+and timestamps are not rewritten. The canonical demo and the sample remain vaccine 2–8.
 
 ## Temperature math
 
@@ -159,7 +159,7 @@ All transitions pure on `ScenarioState`. `ScenarioController(autoStartTicker: fa
 tests; `advanceTick()` drives time. Widget tests pump `ProviderScope` overrides and provide
 a `MaterialApp` wrapper. Smoke suite: `temperature_test.dart`, `band_test.dart`,
 `scenario_state_test.dart`, `driver_flow_test.dart`, `push_banner_test.dart`,
-`audit_pdf_test.dart`.
+`client_detail_test.dart`, `ops_monitor_test.dart`, `audit_pdf_test.dart`.
 
 ## Conventions (latest Flutter 3.47 / Dart 3.13)
 
@@ -176,3 +176,22 @@ a `MaterialApp` wrapper. Smoke suite: `temperature_test.dart`, `band_test.dart`,
 
 Also: `const` constructors, `super.key`, sealed unions with `switch` patterns, enhanced
 enums, `dart format` (tall style), zero `// ignore:` suppressions.
+
+## Concept versus pilot scope
+
+This build is a single-truck, mock-data concept tuned for a 60-second demo. The following are
+deliberately deferred to a pilot rather than missing pieces:
+
+- **Fleet views** — a shipment list or trip switcher in the ops monitor, an attention filter and a
+  cross-shipment "last alert" strip. The state machine is one immutable trip by design (D1).
+- **Ops-side acknowledgement and escalation** — acknowledgement is a driver-owned fact; an ops
+  action needs an operator identity in the custody actor model.
+- **Search and filtering** in the client list — two cards are seeded (live and sample).
+- **Automatic connectivity** — the driver's offline switch stays visible for the demo beat; a
+  pilot detects connectivity and keeps the control in the tray only.
+- **Driver trip list** — the dossier's §6.2 first bullet, alongside the already-deferred
+  per-customer PDF templates, FCM push, a local database, SSO and localisation.
+- **Field legibility** — 10–11 px metadata reads well on the recording emulator; a pilot tests a
+  larger base on mid-range devices in daylight.
+
+Recorded as D71.

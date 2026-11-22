@@ -93,11 +93,14 @@ lib/shared/widgets    provider-free presentation widgets (DemoTray and CallSheet
 lib/routing           go_router shell
 tools/video           emulator take script, caption track, ffmpeg render
 docs/                 decisions registry, architecture contract, demo scripts, implementation notes, video recording plan
-test/                 temperature, state-machine, driver-flow and PDF smoke tests
+test/                 temperature, state-machine, driver-flow, client-detail, ops-monitor and PDF tests
 ```
 
 `docs/decisions.md` is the append-only rationale registry; `docs/architecture.md` is the
-implementation contract. Code carries no explanatory comments by design.
+implementation contract. Code carries no explanatory comments by design. Work deliberately
+deferred to a pilot — fleet views, ops-side acknowledgement, search, automatic connectivity, the
+driver trip list and field legibility testing — is listed under **Concept versus pilot scope** in
+`docs/architecture.md`.
 
 ## Data and privacy guardrails
 

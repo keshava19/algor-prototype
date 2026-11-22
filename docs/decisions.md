@@ -49,7 +49,7 @@ When implementation forces a new micro-decision, add a row — do not annotate c
 | D36 | Seal-photo watermark = live interpolated position + scenario time + plate, e.g. "20.00° N, 73.79° E · 21 Nov 2026 06:25 IST · MH 04 KF 4001" | Geotag proof without permissions |
 | D37 | "Acknowledge" acks with default reason "Driver acknowledged"; "Log action" acks with a reason code + note (note required for "Other"); both reach `excursionAcknowledged` | Fast path and evidence path |
 | D38 | Call sheets (control room from excursion, driver from ops) are in-app, 2 s simulated ringing → "Connected", and append a custody event; the excursion SMS fallback is one-tap, shows "SMS sent · GSM fallback" in place, and appends a custody event | Simulated, never dials. (Amended for D50) |
-| D39 | Chart window = trailing 60 readings; PDF curve = full trip downsampled to ≤ 240 points; both 0–10 fixed Y-axis | Readable curves |
+| D39 | Chart window = trailing 60 readings; PDF curve = full trip downsampled to ≤ 240 points; both 0–10 fixed Y-axis (amended by D53: the axis is band-relative per `BandProfile`; vaccine remains 0–10) | Readable curves |
 | D40 | `sampleDelivered()` bakes the canonical run: excursion 06:25 → ack 06:26 (compressor reset) → out for delivery 21:45 → delivered + e-POD 21:48 | Sample and live render identical logic |
 | D41 | e-POD is in-app only (no share); sharing exists solely via the client audit PDF named `algor-field-audit-172-45678901.pdf` | Agreed scope |
 | D42 | Reset returns to the role picker with fresh initial state (tick 45, role cleared) | Repeatable demos |

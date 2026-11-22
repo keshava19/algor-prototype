@@ -456,5 +456,6 @@ Registry entries that changed during execution, kept here so the history is easy
 | D34 | Every checklist row carries a thumbnail (D63) |
 | D35 | Stepper auto-advances to the confirm step on e-POD generation (D62) |
 | D38 | SMS fallback added beside the simulated call |
+| D39 | Axis made band-relative under `BandProfile` (vaccine remains 0–10; D53) |
 | D43 | Compact 10–13 px metadata labels allowed; single 36 px display readout |
 | D48–D59 | v2 alignment: feed clock, push banner, SMS, event IDs, retry, bands, calibration, ETA, delivery note, DPDP copy, stored excursion reading |
