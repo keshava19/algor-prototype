@@ -19,6 +19,7 @@ final class ScenarioState {
     required this.sealVerified,
     required this.signature,
     required this.isOffline,
+    required this.offlineAuto,
     required this.queue,
     required this.failNextSync,
     required this.epod,
@@ -42,6 +43,7 @@ final class ScenarioState {
     sealVerified: false,
     signature: null,
     isOffline: false,
+    offlineAuto: false,
     queue: const [],
     failNextSync: false,
     epod: null,
@@ -84,6 +86,7 @@ final class ScenarioState {
                 deliveryNote: null,
               ),
         isOffline: false,
+        offlineAuto: false,
         queue: const [
           ChecklistQueued(
             eventId: 'EVT-002',
@@ -134,6 +137,7 @@ final class ScenarioState {
   final bool sealVerified;
   final CapturedSignature? signature;
   final bool isOffline;
+  final bool offlineAuto;
   final List<QueueItem> queue;
   final bool failNextSync;
   final EPod? epod;
@@ -147,6 +151,8 @@ final class ScenarioState {
   BandProfile get bandProfile => BandProfiles.of(band);
 
   int get staleMinutes => tick - lastFeedTick;
+
+  bool get inDeadZone => tick >= deadZoneStartTick && tick <= deadZoneEndTick;
 
   double get currentTemperature => temperatureAt(
     lastFeedTick,
@@ -178,6 +184,7 @@ final class ScenarioState {
     bool? sealVerified,
     CapturedSignature? signature,
     bool? isOffline,
+    bool? offlineAuto,
     List<QueueItem>? queue,
     bool? failNextSync,
     EPod? epod,
@@ -200,6 +207,7 @@ final class ScenarioState {
     sealVerified: sealVerified ?? this.sealVerified,
     signature: signature ?? this.signature,
     isOffline: isOffline ?? this.isOffline,
+    offlineAuto: offlineAuto ?? this.offlineAuto,
     queue: queue ?? this.queue,
     failNextSync: failNextSync ?? this.failNextSync,
     epod: epod ?? this.epod,
@@ -217,7 +225,7 @@ final class ScenarioState {
     return copyWith(
       tick: next,
       lastFeedTick: telemetryGap ? lastFeedTick : next,
-    )._syncStep()._escalationStep()._autoDeliver();
+    )._corridorStep()._syncStep()._escalationStep()._autoDeliver();
   }
 
   String _nextEventId() => 'EVT-${(eventSeq + 1).toString().padLeft(3, '0')}';
@@ -376,7 +384,8 @@ final class ScenarioState {
     );
   }
 
-  ScenarioState setOffline(bool value) => copyWith(isOffline: value);
+  ScenarioState setOffline(bool value) =>
+      copyWith(isOffline: value, offlineAuto: inDeadZone);
 
   ScenarioState setBand(ProductBand value) => copyWith(band: value);
 
@@ -430,7 +439,7 @@ final class ScenarioState {
           source: custodySourceSensor,
         ),
       ],
-    );
+    )._corridorStep();
   }
 
   ScenarioState acknowledge({
@@ -512,13 +521,25 @@ final class ScenarioState {
           actor: driverName,
         ),
       ],
-    );
+    )._corridorStep();
   }
 
   ScenarioState jumpToDelivered() {
     if (phase == TripPhase.delivered) return this;
     return ScenarioState.sampleDelivered(
       signatureBytes: SampleAssets.signaturePng,
+    );
+  }
+
+  ScenarioState _corridorStep() {
+    final auto = inDeadZone;
+    if (auto == offlineAuto) return this;
+    return copyWith(isOffline: auto, offlineAuto: auto)._appendCustody(
+      auto ? 'Entered dead zone' : 'Back in coverage — syncing',
+      detail: auto
+          ? 'Ghat section — no data coverage'
+          : 'Evidence queue draining',
+      source: custodySourceSystem,
     );
   }
 

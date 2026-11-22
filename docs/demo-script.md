@@ -14,7 +14,8 @@ throughout.
    for a live walkthrough, or switch to **0:30** to show escalation inside a short clip. The
    tray also previews the **product band** (vaccine, blood, CRT, frozen), the **telemetry gap**
    and a one-shot **Fail next sync**; all three are preview controls and never rewrite captured
-   records.
+   records. The trip also enters a scripted dead zone by itself (05:47–06:35, the ghat stretch
+   past Nashik); the offline toggle is a manual override for optional beats.
 4. Leave the app on the **Driver & e-POD** screen before triggering the excursion — the alert
    overlay is driver-only by design.
 5. The scenario clock starts at **05:00** and advances one scenario minute per real second.
@@ -25,10 +26,10 @@ throughout.
 | Time | On screen | Do this |
 | --- | --- | --- |
 | 0–5 s | Role picker | Open **Driver & e-POD**. Say: "A pharma truck leaves Mumbai at 4 °C; the driver is in a highway dead zone." |
-| 5–16 s | Checklist | Toggle **Offline (dead zone)** on. Confirm the four rows (pre-cooled 4.0 °C, logger armed, seal intact, reefer clean). Tap **Continue**. |
+| 5–16 s | Checklist | The scripted dead zone opens by itself — the amber banner appears. Confirm the four rows (pre-cooled 4.0 °C, logger armed, seal intact, reefer clean). Tap **Continue**. |
 | 16–22 s | Scan + seal | Tap **Tap to scan** (1.2 s animation), **Continue**; tap **Capture seal photo**, **Seal verified**, **Continue**. The banner now reads "3 items queued, will sync". |
 | 22–32 s | Excursion | Long-press the footer → **Trigger excursion**. Overlay: "Reefer 8.9 °C — outside 2–8 °C band · Near Nashik hub · MH 04 KF 4001". Tap **Call control room** (rings 2 s → Connected → Close); tap **Log action**, choose **Compressor reset**, add "Compressor restarted, set-point restored", save. |
-| 30–38 s | Recovery + signature | Toggle offline **off**. The three queued items sync one per second. Sign on the pad — **Done** is always in the sticky footer — and tap **Done**. The footer counts the syncs; the screen advances itself to "e-POD generated". |
+| 30–38 s | Recovery + signature | The dead zone closes by itself past Nashik; the three queued items sync one per second. Sign on the pad — **Done** is always in the sticky footer — and tap **Done**. The footer counts the syncs; the screen advances itself to "e-POD generated". |
 | 38–48 s | Client QA | Tap **View client view**. The list shows "Latest shipment · Delivered"; open the card: delivery-pack header, temperature curve, excursion acknowledged card, custody trail. Tap **Download audit PDF** in the top bar; show the share sheet and filename `algor-field-audit-172-45678901.pdf`. |
 | 48–60 s | Close | Say: "One Flutter codebase on top of your existing tracking data. Happy to walk Nitesh's team through the integration approach in 15 minutes." |
 
@@ -44,12 +45,13 @@ canonical run (excursion 06:25, ack 06:26, out for delivery 21:45, e-POD 21:48).
 - **Stale feed (10 s).** In the tray enable **Telemetry gap**, close it and show the readout:
   "Stale · last received … · N min ago", with the map marker and chart frozen together while
   the scenario clock keeps moving. Disable the gap to catch up.
-- **SMS fallback (5 s).** Trigger an excursion while **Offline (dead zone)** is on. Tap
+- **SMS fallback (5 s).** Trigger an excursion with the offline override on. Tap
   **SMS control room**: the button becomes "SMS sent · GSM fallback" and a custody event is
   logged, demonstrating the GSM path when data is weak.
-- **Failed sync + retry (12 s).** Offline, capture all three items and sign. Arm **Fail next
-  sync** in the tray, switch online: the next promotion turns red with an event ID. The e-POD
-  stays blocked; tap **Retry** in the capture queue, then let it sync and deliver.
+- **Failed sync + retry (12 s).** With the offline override on, capture all three items and
+  sign. Arm **Fail next sync** in the tray, switch the override off: the next promotion turns
+  red with an event ID. The e-POD stays blocked; tap **Retry** in the footer (or the capture
+  queue), then let it sync and deliver.
 - **Product-band preview (10 s).** In the tray switch to **CRT 15–25** or **Frozen -30 to -20**.
   The readout, band bar, chart, client detail and PDF re-anchor; the checklist keeps its
   original captured readings. Switch back to **Vaccine 2–8** before the canonical take.
@@ -59,17 +61,18 @@ canonical run (excursion 06:25, ack 06:26, out for delivery 21:45, e-POD 21:48).
 1. **Control tower (20 s).** From the role picker open **Live Shipment Monitor**. Point out the
    FEED LIVE strip and scenario clock, 4.2 °C readout, 2–8 °C band, route progress, ETA 22:45
    and the custody preview. "The same data the client sees, one clock."
-2. **Offline driver capture (50 s).** Open the driver flow, switch offline, confirm the
-   checklist, scan the AWB (`172-45678901`), capture and verify the seal (`SL-2291`). Open the
-   banner copy: "Offline mode: highway dead zone — 3 items queued, will sync."
+2. **Offline driver capture (50 s).** Open the driver flow — the scripted dead zone opens on
+   its own and the amber banner appears. Confirm the checklist, scan the AWB (`172-45678901`),
+   capture and verify the seal (`SL-2291`). Show the banner copy: "Offline mode: highway dead
+   zone — 3 items queued, will sync."
 3. **Excursion (45 s).** Long-press the footer → **Trigger excursion** (jumps to 06:25 near
    Nashik). Show 8.9 °C, the countdown ring and escalation language. Use **Call control room**
    to show the simulated call, then **Log action** to capture reason code + note. Mention that
    **Acknowledge** is the one-tap fast path.
 4. **Escalation expiry (optional, 35 s).** With the countdown at 0:30, wait for "Escalated —
    control room notified" before acknowledging. The custody trail gains an escalation entry.
-5. **Recovery and e-POD (40 s).** Switch online, watch the queue promote, sign, and let the
-   e-POD generate automatically. "No manual deliver button; the record closes itself."
+5. **Recovery and e-POD (40 s).** Coverage returns on its own past Nashik; watch the queue
+   promote, then sign and let the e-POD generate automatically. "No manual deliver button; the record closes itself."
 6. **Client QA and PDF (40 s).** Open **Client QA view → Live shipment**. Show the full curve,
    in-band %, MKT, excursion card and custody trail. Download the audit PDF and open it in the
    share sheet preview: shipment table, full-trip curve, excursion record, custody table, e-POD

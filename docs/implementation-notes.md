@@ -29,6 +29,7 @@ the code, and **decision references**.
 | 16 | Action and sync feedback hidden below the fold | Sticky Done footer that becomes the capture status; auto-advance on e-POD | D34, D35, D60, D61, D62, D63 |
 | 17 | Report access below the fold and anonymous custody | App-bar PDF action, delivery-pack header, expandable provenance rows | D64, D65, D66 |
 | 18 | Ops alerts and role switching buried | Alert pinned first, feed strip, last-alert line, Switch role action | D67, D68, D69, D70 |
+| 19 | A driver who forgets to mark a dead zone | Scripted corridor toggles coverage and logs system events; toggles are overrides | D72 |
 
 ## Time, determinism and testability
 
@@ -436,6 +437,25 @@ the four app bars · `lib/features/about/about_concept_sheet.dart` ·
 `lib/core/domain/models.dart` (`ExcursionEvent.rangeLabel`).
 
 **Decisions.** D67, D68, D69, D70.
+
+### 23. Coverage that marks itself
+
+**Problem.** The offline switch was a demo control. A driver in a dead zone should never have to
+remember to flip it, and a forgotten flip would make queued captures look online — or worse,
+pretend a sync happened where there was no signal.
+
+**Resolution.** The scenario owns the dead zone: ticks 47–140 (the ghat stretch to just past
+Nashik) reconcile `isOffline` on every tick move, including the demo jumps, and append System
+custody events on entry and exit. The manual switch and the tray toggle remain overrides that
+hold between boundaries; a boundary forces its value. When coverage returns the queue drains on
+its own, and the e-POD still waits for the signature. The canonical sample keeps its eight
+events, so EVT numbering and the PDF contract stay stable.
+
+**Where.** `lib/core/domain/fictional_data.dart` (`deadZoneStartTick`, `deadZoneEndTick`) ·
+`lib/core/scenario/scenario_state.dart` (`inDeadZone`, `_corridorStep`, `offlineAuto`,
+`setOffline`) · `test/scenario_state_test.dart` · `test/driver_flow_test.dart`.
+
+**Decisions.** D72 (amends D71's scope wording).
 
 ## Amendment trail
 

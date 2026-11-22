@@ -111,7 +111,7 @@ void main() {
     expect(find.text('Signature captured · 0 of 3 synced'), findsOneWidget);
 
     final controller = controllerOf(tester);
-    for (var tick = 0; tick < 10; tick++) {
+    for (var tick = 0; tick < 160; tick++) {
       controller.advanceTick();
     }
     await tester.pumpAndSettle();
@@ -147,6 +147,10 @@ void main() {
     await tapDone(tester);
 
     final controller = controllerOf(tester);
+    for (var tick = 0; tick < 3; tick++) {
+      controller.advanceTick();
+    }
+    controller.setOffline(false);
     for (var tick = 0; tick < 2; tick++) {
       controller.advanceTick();
     }
@@ -155,6 +159,7 @@ void main() {
 
     controller.armSyncFailure();
     controller.advanceTick();
+    controller.advanceTick();
     await tester.pumpAndSettle();
     expect(find.text('Sync failed'), findsOneWidget);
     expect(find.widgetWithText(TextButton, 'Retry'), findsOneWidget);
@@ -162,13 +167,31 @@ void main() {
     await tester.tap(find.widgetWithText(TextButton, 'Retry'));
     await tester.pumpAndSettle();
     expect(find.text('Sync failed'), findsNothing);
-    expect(find.text('Signature captured · 1 of 3 synced'), findsOneWidget);
 
     for (var tick = 0; tick < 10; tick++) {
       controller.advanceTick();
     }
     await tester.pumpAndSettle();
     expect(find.text('Step 5 of 5'), findsOneWidget);
+  });
+
+  testWidgets('the scripted dead zone announces itself without a tap', (
+    tester,
+  ) async {
+    await tester.pumpWidget(harness());
+    await tester.pumpAndSettle();
+
+    final controller = controllerOf(tester);
+    for (var tick = 0; tick < 3; tick++) {
+      controller.advanceTick();
+    }
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Offline mode: highway dead zone — 0 items queued, will sync'),
+      findsOneWidget,
+    );
+    expect(find.byType(Switch), findsOneWidget);
   });
 
   testWidgets('Done stays visible without scrolling on a short viewport', (

@@ -31,9 +31,17 @@ enum TripPhase { driving, excursionActive, excursionAcknowledged, delivered }
 | any | `reset()` | — | initial (role picker) |
 
 `nextTick()` order: freeze when delivered → tick+1 (or `lastFeedTick` stays frozen
-during a telemetry gap) → sync one queue promotion when online (pending→syncing→synced, or
-pending→failed when the one-shot failure control is armed) → decrement escalation when
-excursionActive (expiry sets `escalated`) → evaluate auto e-POD rule.
+during a telemetry gap) → reconcile the scripted dead-zone corridor → sync one queue promotion
+when online (pending→syncing→synced, or pending→failed when the one-shot failure control is
+armed) → decrement escalation when excursionActive (expiry sets `escalated`) → evaluate auto
+e-POD rule. Corridor reconciliation also runs after the demo jumps (`triggerExcursion`,
+`jumpToOutForDelivery`), so no jump can strand the state offline.
+
+The dead-zone corridor covers ticks 47–140 (the ghat stretch to just past Nashik). Entry and
+exit set `isOffline` and append System custody events; the driver's manual switch and the tray
+toggle are overrides that hold between boundaries, while a boundary forces its value. The
+canonical sample keeps its eight custody events, so event numbering and the PDF stay unchanged.
+(D72)
 
 Initial state: tick 45 (05:00), lastFeedTick 45, phase driving, vaccine band, custody
 `[Dispatched · 04:15 · Mumbai (BOM)]`.
@@ -187,8 +195,8 @@ deliberately deferred to a pilot rather than missing pieces:
 - **Ops-side acknowledgement and escalation** — acknowledgement is a driver-owned fact; an ops
   action needs an operator identity in the custody actor model.
 - **Search and filtering** in the client list — two cards are seeded (live and sample).
-- **Automatic connectivity** — the driver's offline switch stays visible for the demo beat; a
-  pilot detects connectivity and keeps the control in the tray only.
+- **Platform connectivity detection** — the concept simulates the dead zone from the trip clock
+  (D72); a pilot reads the real radio state and keeps the scenario override in the tray only.
 - **Driver trip list** — the dossier's §6.2 first bullet, alongside the already-deferred
   per-customer PDF templates, FCM push, a local database, SSO and localisation.
 - **Field legibility** — 10–11 px metadata reads well on the recording emulator; a pilot tests a

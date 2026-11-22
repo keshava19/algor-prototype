@@ -65,7 +65,7 @@ Launcher icons are generated with `dart run flutter_launcher_icons`.
 Long-press the concept footer on any screen to open the demo tray:
 
 - reset to the role picker at 05:00
-- offline on/off (driver evidence queue only)
+- offline on/off override (the trip also enters a scripted dead zone by itself)
 - telemetry gap to freeze the sensor feed
 - start a temperature drift
 - trigger the 06:25 excursion near Nashik

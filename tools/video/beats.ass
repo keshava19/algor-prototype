@@ -22,7 +22,7 @@ Dialogue: 0,0:00:21.00,0:00:23.60,Caption,,0,0,0,,Every call lands\Nin the audit
 Dialogue: 0,0:00:24.60,0:00:26.60,Caption,,0,0,0,,Log the fix — who, when,\Nwhat was done.
 Dialogue: 0,0:00:27.80,0:00:29.80,Caption,,0,0,0,,Back in signal —\Nthe captures sync one by one.
 Dialogue: 0,0:00:29.90,0:00:33.40,Caption,,0,0,0,,The receiver signs\Non the device.
-Dialogue: 0,0:00:33.60,0:00:37.90,Caption,,0,0,0,,No "delivered" button —\Nthe e-POD closes itself.
-Dialogue: 0,0:00:38.10,0:00:44.90,Caption,,0,0,0,,The client sees everything\Nthe driver captured.
+Dialogue: 0,0:00:33.60,0:00:36.50,Caption,,0,0,0,,No "delivered" button —\Nthe e-POD closes itself.
+Dialogue: 0,0:00:36.70,0:00:44.90,Caption,,0,0,0,,The client sees everything\Nthe driver captured.
 Dialogue: 0,0:00:45.20,0:00:48.80,Caption,,0,0,0,,One tap — the full audit PDF.
 Dialogue: 0,0:00:49.20,0:00:59.95,Caption,,0,0,0,,One Flutter codebase,\Nbuilt on your tracking data.

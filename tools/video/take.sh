@@ -136,7 +136,6 @@ run_take() {
   T0=$(date +%s%3N)
 
   at 2.5;  tap "$ROLE_DRIVER_X" "$ROLE_DRIVER_Y"
-  at 3.7;  tap "$OFFLINE_X" "$OFFLINE_Y"
   at 4.5;  tap "$ROW4_X" "$ROW4_Y"
   at 5.5;  tap "$ROW3_X" "$ROW3_Y"
   at 6.5;  tap "$ROW2_X" "$ROW2_Y"
@@ -154,7 +153,6 @@ run_take() {
   at 23.6; tap "$CALL_CLOSE_X" "$CALL_CLOSE_Y"
   at 24.8; tap "$OVERLAY_LOG_X" "$OVERLAY_LOG_Y"
   at 26.0; tap "$SAVE_ACK_X" "$SAVE_ACK_Y"
-  at 27.8; tap "$OFFLINE_X" "$OFFLINE_Y"
   at 29.0; swipe "$SIGN1_X1" "$SIGN1_Y1" "$SIGN1_X2" "$SIGN1_Y2" "$SIGN_MS"
   at 29.4; swipe "$SIGN2_X1" "$SIGN2_Y1" "$SIGN2_X2" "$SIGN2_Y2" "$SIGN_MS"
   at 29.8; tap "$DONE_X" "$DONE_Y"

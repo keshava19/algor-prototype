@@ -42,7 +42,7 @@ Companion files: [`../tools/video/beats.ass`](../tools/video/beats.ass) (caption
 | --- | --- | --- |
 | 0.0–2.5 | Opening hold on the role picker | 1 |
 | 2.5 | Tap **Driver & e-POD** | 2 |
-| 3.7 | Tap the header **Offline (dead zone)** switch | 2 → 3 |
+| 3.0–4.5 | The scripted dead zone opens by itself; the amber banner appears | 2 → 3 |
 | 4.5, 5.5, 6.5, 7.5 | Tap the four checklist rows | 3 |
 | 8.7 | **Continue** | 4 |
 | 10.0 | **Tap to scan** (1.2 s animation) | 4 |
@@ -58,7 +58,7 @@ Companion files: [`../tools/video/beats.ass`](../tools/video/beats.ass) (caption
 | 23.6 | **Close** (enabled after the 2 s ring; 0.8 s margin) | 8 |
 | 24.8 | **Log action** | 9 |
 | 26.0 | **Save acknowledgement** (Compressor reset is pre-selected) | 9 |
-| 27.8 | Offline switch **off**; the queue drains, last sync about 33.2 | 10 |
+| 28.8 | The dead zone closes past Nashik; the queue drains by itself, last sync about 34.6 | 10 |
 | 29.0–29.4 | Two signature strokes (400 ms each) | 10 → 11 |
 | 29.8 | **Done** — sticky footer, no scroll | 11 |
 | 29.8–38.0 | Hold; the footer counts 1→3 of 3 synced, the e-POD fires about 33.2, and the screen advances itself about 33.3 | 12 |
@@ -84,8 +84,8 @@ Companion files: [`../tools/video/beats.ass`](../tools/video/beats.ass) (caption
 | 9 | 24.6 → 26.6 | Log the fix — who, when, what was done. |
 | 10 | 27.8 → 29.8 | Back in signal — the captures sync one by one. |
 | 11 | 29.9 → 33.4 | The receiver signs on the device. |
-| 12 | 33.6 → 37.9 | No "delivered" button — the e-POD closes itself. |
-| 13 | 38.1 → 44.9 | The client sees everything the driver captured. |
+| 12 | 33.6 → 36.5 | No "delivered" button — the e-POD closes itself. |
+| 13 | 36.7 → 44.9 | The client sees everything the driver captured. |
 | 14 | 45.2 → 48.8 | One tap — the full audit PDF. |
 | 15 | 49.2 → 59.95 | One Flutter codebase, built on your tracking data. |
 
@@ -99,8 +99,9 @@ lines carry explicit `\N` breaks.
 ## Render
 
 The emulator encoder records only on screen damage (VFR), so the raw file ends at the last
-visual change — around 45 s — even though `screenrecord` runs the full 60 s. The share sheet is
-fully rendered by then, so `render.sh` holds the final frame to exactly 60 s with `tpad`:
+visual change — around 45–55 s — even though `screenrecord` runs the full 60 s. The container
+may report a longer duration (the recorder's stop time), so `render.sh` takes the last frame's
+timestamp, trims to it, and holds that final frame to exactly 60 s with `tpad`:
 
 ```bash
 PAD=$(awk -v d="$DUR" 'BEGIN { printf "%.3f", 60 - d }')
@@ -122,8 +123,8 @@ After each take, extract these raw frames and read them:
 | Raw 19.0 s | Excursion overlay at 8.9 °C with the push banner still visible |
 | Raw 26.5 s | Signature step, overlay gone |
 | Raw 29.9 s | Signature drawn; Done in the sticky footer, no scroll |
-| Raw 34.5 s | Confirm step with "e-POD generated" and three synced event IDs (the frame is held until the client list at ~38 s) |
-| Raw 38.0 s | Client list, "Latest shipment · Delivered" |
+| Raw 33.4 s | Confirm step with "e-POD generated" and three synced event IDs (the frame is held until the client list at ~36.6 s) |
+| Raw 37.0 s | Client list, "Latest shipment · Delivered" |
 | Raw 47.4 s | Share sheet with `algor-field-audit-172-45678901.pdf` |
 | Rendered 50 s | Held share sheet, caption above the footer |
 | Rendered 58 s | Closing caption above the footer |

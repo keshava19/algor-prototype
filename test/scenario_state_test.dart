@@ -6,6 +6,11 @@ import 'package:algor_field/core/domain/models.dart';
 import 'package:algor_field/core/scenario/scenario_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+ScenarioState afterDeadZone() => ScenarioState.initial().copyWith(
+  tick: deadZoneEndTick + 1,
+  lastFeedTick: deadZoneEndTick + 1,
+);
+
 void main() {
   test('initial state starts at 05:00 with one baked custody event', () {
     final state = ScenarioState.initial();
@@ -13,6 +18,8 @@ void main() {
     expect(state.phase, TripPhase.driving);
     expect(state.custody, hasLength(1));
     expect(state.currentTemperature, inInclusiveRange(3.9, 4.5));
+    expect(state.isOffline, isFalse);
+    expect(state.inDeadZone, isFalse);
   });
 
   test('offline captures queue without promoting', () {
@@ -33,7 +40,7 @@ void main() {
   });
 
   test('online sync promotes exactly one status per tick', () {
-    var state = ScenarioState.initial();
+    var state = afterDeadZone();
     for (var index = 0; index < state.checklist.length; index++) {
       state = state.confirmChecklistRow(index);
     }
@@ -68,7 +75,7 @@ void main() {
   });
 
   test('signature plus synced captures triggers automatic delivery', () {
-    var state = ScenarioState.initial();
+    var state = afterDeadZone();
     for (var index = 0; index < state.checklist.length; index++) {
       state = state.confirmChecklistRow(index);
     }
@@ -121,7 +128,7 @@ void main() {
   });
 
   test('failed sync blocks delivery until the item is retried', () {
-    var state = ScenarioState.initial();
+    var state = afterDeadZone();
     for (var index = 0; index < state.checklist.length; index++) {
       state = state.confirmChecklistRow(index);
     }
@@ -196,11 +203,73 @@ void main() {
     expect(recorded, 8.9);
     expect(preview.excursion?.reading, recorded);
     expect(preview.currentTemperature, BandProfiles.crt.excursion);
-    expect(preview.custody.last.detail, '8.9 °C near Nashik hub');
+    final detectedEvent = preview.custody.firstWhere(
+      (event) => event.title == 'Excursion detected',
+    );
+    expect(detectedEvent.detail, '8.9 °C near Nashik hub');
+  });
+
+  test('the scripted dead zone opens and closes on its own', () {
+    var state = ScenarioState.initial();
+    while (state.tick < deadZoneStartTick) {
+      state = state.nextTick();
+    }
+    expect(state.tick, deadZoneStartTick);
+    expect(state.isOffline, isTrue);
+    expect(state.custody.last.title, 'Entered dead zone');
+    expect(state.custody.last.source, custodySourceSystem);
+
+    while (state.inDeadZone) {
+      state = state.nextTick();
+    }
+    expect(state.tick, deadZoneEndTick + 1);
+    expect(state.isOffline, isFalse);
+    expect(state.custody.last.title, 'Back in coverage — syncing');
+    expect(state.custody.last.source, custodySourceSystem);
+  });
+
+  test('corridor boundaries reconcile across the demo jumps', () {
+    final jumped = ScenarioState.initial().triggerExcursion();
+    expect(jumped.tick, excursionJumpTick);
+    expect(jumped.isOffline, isTrue);
+    expect(
+      jumped.custody.any((event) => event.title == 'Entered dead zone'),
+      isTrue,
+    );
+
+    var driving = ScenarioState.initial();
+    while (driving.tick < deadZoneStartTick) {
+      driving = driving.nextTick();
+    }
+    final out = driving.jumpToOutForDelivery();
+    expect(out.tick, outForDeliveryTick);
+    expect(out.isOffline, isFalse);
+    expect(out.custody.last.title, 'Back in coverage — syncing');
+  });
+
+  test('a manual override holds until the next corridor boundary', () {
+    var state = ScenarioState.initial();
+    while (state.tick < deadZoneStartTick) {
+      state = state.nextTick();
+    }
+    expect(state.isOffline, isTrue);
+
+    state = state.setOffline(false);
+    expect(state.isOffline, isFalse);
+    final next = state.nextTick();
+    expect(next.isOffline, isFalse);
+    expect(next.offlineAuto, isTrue);
+
+    while (state.inDeadZone) {
+      state = state.nextTick();
+    }
+    expect(state.tick, deadZoneEndTick + 1);
+    expect(state.isOffline, isFalse);
+    expect(state.custody.last.title, 'Back in coverage — syncing');
   });
 
   test('delivery note is captured and carried onto the e-POD', () {
-    var state = ScenarioState.initial();
+    var state = afterDeadZone();
     for (var index = 0; index < state.checklist.length; index++) {
       state = state.confirmChecklistRow(index);
     }

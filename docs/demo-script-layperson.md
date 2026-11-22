@@ -33,7 +33,7 @@ Be upfront with the viewer that the demo has a remote; it explains the time jump
 | Control | What it does |
 | --- | --- |
 | **Reset** | Returns to the role picker with a fresh 05:00 trip |
-| **Offline (dead zone)** | Toggles network loss for driver evidence; captures queue locally and sync one per second on reconnect |
+| **Offline (dead zone)** | Manual override for presenter beats; the trip also enters a scripted dead zone by itself (05:47–06:35), and captures sync when coverage returns |
 | **Telemetry gap (stale feed)** | Freezes the sensor feed; the readout, map and chart show "last received" and the ops strip flips to FEED STALE |
 | **Start drift** | Starts a gradual temperature climb, slower than the excursion trigger |
 | **Trigger excursion** | Jumps the clock to 06:25 near Nashik, pins the reading at 8.9 °C, and closes the tray |
@@ -104,8 +104,8 @@ map.
 
 ### 0:50–2:05 — Driver offline (checklist, scan, seal)
 
-**Do.** Go home, tap **Driver & e-POD**, and flip **Offline (dead zone)** on. Tap all four
-checklist rows while talking, then tap **Continue**.
+**Do.** Go home and tap **Driver & e-POD** — the app has entered its ghat dead zone on its own
+(the amber banner). Tap all four checklist rows while talking, then tap **Continue**.
 
 **Say.**
 
@@ -155,8 +155,9 @@ set-point restored", and tap **Save acknowledgement**.
 
 ### 3:05–3:50 — The delivery
 
-**Do.** Open the tray, tap **Jump to out-for-delivery**, flip **Offline** off, then tap
-**Continue** three times to reach **Step 4 of 5** and hand the phone to the viewer.
+**Do.** Open the tray and tap **Jump to out-for-delivery** — coverage already returned on its
+own past Nashik — then tap **Continue** three times to reach **Step 4 of 5** and hand the phone
+to the viewer.
 
 **Say.**
 
@@ -204,14 +205,15 @@ share sheet with the filename `algor-field-audit-172-45678901.pdf`, and open the
 
 - **Call control room:** from the alarm, show the simulated call (rings about two seconds,
   then Connected); the call is recorded in the diary.
-- **SMS fallback:** with **Offline** on, tap **SMS control room**; the button becomes "SMS sent
-  · GSM fallback" and the diary gains an entry — evidence that the weak-signal path works.
+- **SMS fallback:** with the offline override on, tap **SMS control room**; the button becomes
+  "SMS sent · GSM fallback" and the diary gains an entry — evidence that the weak-signal path
+  works.
 - **Stale feed:** enable **Telemetry gap** in the tray. The reading, map and chart freeze; the
   readout says "Stale · last received …", and the ops strip flips to FEED STALE. Switch it off
   to catch up.
-- **Failed sync:** offline, capture and sign, arm **Fail next sync**, then go online. One row
-  turns red with an event ID; the e-POD waits. Tap **Retry** in the capture queue and let it
-  finish.
+- **Failed sync:** with the offline override on, capture and sign, arm **Fail next sync**, then
+  switch the override off. One row turns red with an event ID; the e-POD waits. Tap **Retry** in
+  the footer (or the capture queue) and let it finish.
 - **Band preview:** switch the tray to **CRT 15–25** or **Frozen -30 to -20**; the readout,
   chart, client detail and PDF re-anchor, while the checklist keeps its captured readings.
   Switch back to **Vaccine 2–8** before the canonical run.
