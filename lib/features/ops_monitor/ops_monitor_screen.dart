@@ -21,7 +21,10 @@ class OpsMonitorScreen extends ConsumerWidget {
     final state = ref.watch(scenarioControllerProvider);
     final theme = Theme.of(context);
     final excursion = state.excursion;
-    final distanceKm = (state.tick / totalTripMinutes * 1405).clamp(0, 1405);
+    final distanceKm = (state.lastFeedTick / totalTripMinutes * 1405).clamp(
+      0,
+      1405,
+    );
     final recentCustody = state.custody.length <= 4
         ? state.custody
         : state.custody.sublist(state.custody.length - 4);
@@ -45,19 +48,29 @@ class OpsMonitorScreen extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.danger.withValues(alpha: 0.14),
+                  color:
+                      (state.telemetryGap ? AppColors.queued : AppColors.danger)
+                          .withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.circle, size: 8, color: AppColors.danger),
-                    SizedBox(width: 6),
+                    Icon(
+                      state.telemetryGap ? Icons.wifi_off : Icons.circle,
+                      size: 8,
+                      color: state.telemetryGap
+                          ? AppColors.queued
+                          : AppColors.danger,
+                    ),
+                    const SizedBox(width: 6),
                     Text(
-                      'LIVE',
+                      state.telemetryGap ? 'STALE' : 'LIVE',
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.danger,
+                        color: state.telemetryGap
+                            ? AppColors.queued
+                            : AppColors.danger,
                         letterSpacing: 0.6,
                       ),
                     ),
@@ -111,15 +124,22 @@ class OpsMonitorScreen extends ConsumerWidget {
                   const SizedBox(height: 14),
                   TempReadout(
                     celsius: state.currentTemperature,
-                    bandMin: bandMin,
-                    bandMax: bandMax,
+                    band: state.bandProfile,
                     phase: state.phase,
+                    stale:
+                        state.telemetryGap &&
+                        state.phase != TripPhase.delivered,
+                    sourceLabel: formatFeedLabel(
+                      lastFeedTick: state.lastFeedTick,
+                      nowTick: state.tick,
+                      stale: state.telemetryGap,
+                      finalRecord: state.phase == TripPhase.delivered,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   TempBandChart(
                     readings: ref.watch(chartReadingsProvider),
-                    bandMin: bandMin,
-                    bandMax: bandMax,
+                    band: state.bandProfile,
                     excursionTick: excursion?.startedTick,
                     height: 130,
                   ),

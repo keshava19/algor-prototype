@@ -85,12 +85,21 @@ void main() {
     await gesture.up();
     await tester.pumpAndSettle();
 
+    final doneFinder = find.text('Done');
+    if (doneFinder.evaluate().isEmpty) {
+      await tester.fling(
+        find.text('Consignee signature'),
+        const Offset(0, -600),
+        1500,
+      );
+      await tester.pumpAndSettle();
+    }
     final doneButton = tester.widget<FilledButton>(
       find.widgetWithText(FilledButton, 'Done'),
     );
     expect(doneButton.onPressed, isNotNull);
-    await tester.ensureVisible(find.text('Done'));
-    await tester.tap(find.text('Done'));
+    await tester.ensureVisible(doneFinder);
+    await tester.tap(doneFinder);
     await tester.pump();
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 400)),

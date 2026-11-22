@@ -15,7 +15,7 @@ class AboutConceptSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return SafeArea(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -40,6 +40,21 @@ class AboutConceptSheet extends StatelessWidget {
             Text(
               'Phase 2 — Client visibility: live temperature curve, custody '
               'trail and one-tap audit reports that support GDP documentation.',
+              style: theme.textTheme.bodySmall,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'One owner per fact. The app never creates temperature or '
+              'location data; the logger and tracker own those, and the app '
+              'reads them. The driver owns only what no sensor can know, '
+              'captured as append-only events with unique IDs.',
+              style: theme.textTheme.bodySmall,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Designed with DPDP obligations in mind: notice and consent, '
+              'minimal collection, encrypted storage and Indian hosting are '
+              'part of the Phase 1 build. This concept uses mock data only.',
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: 12),

@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/domain/band.dart';
 import '../../core/domain/models.dart';
 import '../../core/theme/app_theme.dart';
 
@@ -8,15 +9,13 @@ class TempBandChart extends StatelessWidget {
   const TempBandChart({
     super.key,
     required this.readings,
-    required this.bandMin,
-    required this.bandMax,
+    required this.band,
     this.excursionTick,
     this.height = 150,
   });
 
   final List<TempReading> readings;
-  final double bandMin;
-  final double bandMax;
+  final BandProfile band;
   final int? excursionTick;
   final double height;
 
@@ -41,14 +40,14 @@ class TempBandChart extends StatelessWidget {
         LineChartData(
           minX: 0,
           maxX: maxX,
-          minY: 0,
-          maxY: 10,
+          minY: band.axisMin,
+          maxY: band.axisMax,
           clipData: const FlClipData.all(),
           rangeAnnotations: RangeAnnotations(
             horizontalRangeAnnotations: [
               HorizontalRangeAnnotation(
-                y1: bandMin,
-                y2: bandMax,
+                y1: band.min,
+                y2: band.max,
                 color: AppColors.success.withValues(alpha: 0.14),
               ),
             ],
@@ -56,7 +55,7 @@ class TempBandChart extends StatelessWidget {
           gridData: FlGridData(
             show: true,
             drawVerticalLine: false,
-            horizontalInterval: 2,
+            horizontalInterval: band.axisInterval,
             getDrawingHorizontalLine: (_) => FlLine(
               color: scheme.outlineVariant.withValues(alpha: 0.25),
               strokeWidth: 1,
@@ -70,8 +69,8 @@ class TempBandChart extends StatelessWidget {
             leftTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
-                interval: 2,
-                reservedSize: 30,
+                interval: band.axisInterval,
+                reservedSize: 34,
                 getTitlesWidget: (value, meta) => Text(
                   value.toInt().toString(),
                   style: TextStyle(

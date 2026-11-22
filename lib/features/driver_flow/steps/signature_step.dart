@@ -20,7 +20,20 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
   final TextEditingController _nameController = TextEditingController(
     text: consigneeName,
   );
+  final TextEditingController _noteController = TextEditingController();
   bool _hasInk = false;
+  String? _deliveryNote;
+
+  bool get _isOther => _deliveryNote == deliveryNoteOtherLabel;
+
+  bool get _canDone =>
+      _hasInk && (!_isOther || _noteController.text.trim().isNotEmpty);
+
+  String? get _resolvedNote => _isOther
+      ? (_noteController.text.trim().isEmpty
+            ? null
+            : _noteController.text.trim())
+      : _deliveryNote;
 
   @override
   void initState() {
@@ -41,6 +54,7 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
   void dispose() {
     _signatureController.dispose();
     _nameController.dispose();
+    _noteController.dispose();
     super.dispose();
   }
 
@@ -50,7 +64,9 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
     final name = _nameController.text.trim().isEmpty
         ? consigneeName
         : _nameController.text.trim();
-    ref.read(scenarioControllerProvider.notifier).captureSignature(bytes, name);
+    ref
+        .read(scenarioControllerProvider.notifier)
+        .captureSignature(bytes, name, deliveryNote: _resolvedNote);
   }
 
   @override
@@ -98,13 +114,6 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
                 onPressed: _signatureController.clear,
                 child: const Text('Clear'),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: FilledButton(
-                  onPressed: _hasInk ? _done : null,
-                  child: const Text('Done'),
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -114,6 +123,47 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
               labelText: 'Consignee name',
               border: OutlineInputBorder(),
             ),
+          ),
+          const SizedBox(height: 14),
+          Text(deliveryNoteLabel, style: theme.textTheme.labelLarge),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ChoiceChip(
+                label: const Text(deliveryNoteNoneLabel),
+                selected: _deliveryNote == null,
+                onSelected: (_) => setState(() => _deliveryNote = null),
+              ),
+              for (final option in deliveryNoteOptions)
+                ChoiceChip(
+                  label: Text(option),
+                  selected: _deliveryNote == option,
+                  onSelected: (_) => setState(() {
+                    _deliveryNote = option;
+                    _noteController.clear();
+                  }),
+                ),
+            ],
+          ),
+          if (_isOther) ...[
+            const SizedBox(height: 10),
+            TextField(
+              controller: _noteController,
+              minLines: 1,
+              maxLines: 3,
+              onChanged: (_) => setState(() {}),
+              decoration: const InputDecoration(
+                labelText: 'Note (required)',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+          const SizedBox(height: 14),
+          FilledButton(
+            onPressed: _canDone ? _done : null,
+            child: const Text('Done'),
           ),
         ] else
           Card(
@@ -137,6 +187,17 @@ class _SignatureStepState extends ConsumerState<SignatureStep> {
                       ),
                     ],
                   ),
+                  if (captured.deliveryNote != null) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      'Delivery note: ${captured.deliveryNote}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.7,
+                        ),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 10),
                   Image.memory(captured.bytes, height: 70),
                 ],

@@ -11,13 +11,9 @@ const consigneeName = 'R. Menon';
 const consigneeHub = 'DelPharma Distribution Hub, Gurugram';
 const defaultSealNumber = 'SL-2291';
 const loggerId = 'LG-2214';
-const productLabel = 'Pharma · 2–8 °C';
+const loggerCalibration = 'calibrated Oct 2026';
 const laneLabel = 'Mumbai (BOM) → Delhi (DEL)';
 const scenarioDateLabel = '21 Nov 2026';
-const bandMin = 2.0;
-const bandMax = 8.0;
-const setPointTemp = 4.0;
-const excursionTemp = 8.9;
 const totalTripMinutes = 1110;
 const initialTick = 45;
 const excursionJumpTick = 130;
@@ -27,16 +23,28 @@ const etaTick = 1110;
 const defaultEscalationSeconds = 120;
 const demoEscalationSeconds = 30;
 const controlRoomNote = 'Simulated call for concept demo';
+const smsControlRoomNote = 'GSM fallback · data channel weak';
 const offlineToggleLabel = 'Offline (dead zone)';
+const telemetryGapLabel = 'Telemetry gap (stale feed)';
+const failNextSyncLabel = 'Fail next sync';
 const epodHeldLabel = 'e-POD held locally — will send on reconnect';
-const excursionTitle = 'Reefer 8.9 °C — outside 2–8 °C band';
 const excursionLocation = 'Near Nashik hub · MH 04 KF 4001';
 const acknowledgeLabel = 'Acknowledge';
 const logActionLabel = 'Log action';
 const callControlRoomLabel = 'Call control room';
+const smsControlRoomLabel = 'SMS control room';
+const smsSentLabel = 'SMS sent · GSM fallback';
 const downloadAuditPdfLabel = 'Download audit PDF';
 const sealVerifiedLabel = 'Seal verified';
 const deliveredLabel = 'Delivered';
+const deliveryNoteLabel = 'Delivery note (optional)';
+const deliveryNoteOtherLabel = 'Other';
+const deliveryNoteNoneLabel = 'None';
+const deliveryNoteOptions = <String>[
+  'Door closed at arrival',
+  'Access delay',
+  deliveryNoteOtherLabel,
+];
 
 String offlineBanner(int items) =>
     'Offline mode: highway dead zone — $items '
@@ -65,22 +73,39 @@ const defaultChecklist = <ChecklistEntry>[
 ];
 
 const canonicalCustody = <CustodyEvent>[
-  CustodyEvent(title: 'Dispatched', tick: 0, detail: 'Mumbai (BOM)'),
-  CustodyEvent(title: 'Pre-trip checklist confirmed', tick: 8),
-  CustodyEvent(title: 'AWB scanned', tick: 10),
-  CustodyEvent(title: 'Seal verified', tick: 12, detail: 'SL-2291'),
   CustodyEvent(
+    eventId: 'EVT-001',
+    title: 'Dispatched',
+    tick: 0,
+    detail: 'Mumbai (BOM)',
+  ),
+  CustodyEvent(
+    eventId: 'EVT-002',
+    title: 'Pre-trip checklist confirmed',
+    tick: 8,
+  ),
+  CustodyEvent(eventId: 'EVT-003', title: 'AWB scanned', tick: 10),
+  CustodyEvent(
+    eventId: 'EVT-004',
+    title: 'Seal verified',
+    tick: 12,
+    detail: 'SL-2291',
+  ),
+  CustodyEvent(
+    eventId: 'EVT-005',
     title: 'Excursion detected',
     tick: 130,
     detail: '8.9 °C near Nashik hub',
   ),
   CustodyEvent(
+    eventId: 'EVT-006',
     title: 'Excursion acknowledged',
     tick: 131,
     detail: 'Compressor reset',
   ),
-  CustodyEvent(title: 'Out for delivery', tick: 1050),
+  CustodyEvent(eventId: 'EVT-007', title: 'Out for delivery', tick: 1050),
   CustodyEvent(
+    eventId: 'EVT-008',
     title: 'Delivered · e-POD generated · Sent for invoicing',
     tick: 1053,
   ),

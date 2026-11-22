@@ -10,15 +10,16 @@ final scenarioControllerProvider =
     NotifierProvider<ScenarioController, ScenarioState>(ScenarioController.new);
 
 final truckPositionProvider = Provider<({double lat, double lng})>(
-  (ref) => positionOnRoute(ref.watch(scenarioControllerProvider).tick),
+  (ref) => positionOnRoute(ref.watch(scenarioControllerProvider).lastFeedTick),
 );
 
 final chartReadingsProvider = Provider<List<TempReading>>((ref) {
   final state = ref.watch(scenarioControllerProvider);
-  final fromTick = state.tick - 59 < 0 ? 0 : state.tick - 59;
+  final fromTick = state.lastFeedTick - 59 < 0 ? 0 : state.lastFeedTick - 59;
   return readingsBetween(
     fromTick,
-    state.tick,
+    state.lastFeedTick,
+    band: state.bandProfile,
     driftFrom: state.driftStartedTick,
     acknowledgedAt: state.excursion?.acknowledgedTick,
     pinFromTick: state.phase == TripPhase.excursionActive

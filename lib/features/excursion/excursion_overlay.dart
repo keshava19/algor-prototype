@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/domain/band.dart';
 import '../../core/domain/fictional_data.dart';
 import '../../core/domain/models.dart';
 import '../../core/scenario/providers.dart';
@@ -19,6 +20,13 @@ class ExcursionOverlay extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(scenarioControllerProvider);
     final visible = enabled && state.phase == TripPhase.excursionActive;
+    final smsSent =
+        state.excursion != null &&
+        state.custody.any(
+          (event) =>
+              event.title == 'Control room SMS sent' &&
+              event.tick >= state.excursion!.startedTick,
+        );
     return IgnorePointer(
       ignoring: !visible,
       child: AnimatedOpacity(
@@ -30,6 +38,8 @@ class ExcursionOverlay extends ConsumerWidget {
                 totalSeconds: state.escalationDuration,
                 escalated: state.excursion?.escalated ?? false,
                 tick: state.tick,
+                band: state.bandProfile,
+                smsSent: smsSent,
                 onAcknowledge: () =>
                     ref.read(scenarioControllerProvider.notifier).acknowledge(),
                 onLogAction: () => showLogActionSheet(context),
@@ -39,6 +49,9 @@ class ExcursionOverlay extends ConsumerWidget {
                   subtitle: 'Algor control room · simulated call',
                   custodyTitle: 'Control room called',
                 ),
+                onSms: () => ref
+                    .read(scenarioControllerProvider.notifier)
+                    .smsControlRoom(),
               )
             : const SizedBox.shrink(),
       ),
@@ -52,18 +65,24 @@ class _ExcursionCard extends StatelessWidget {
     required this.totalSeconds,
     required this.escalated,
     required this.tick,
+    required this.band,
+    required this.smsSent,
     required this.onAcknowledge,
     required this.onLogAction,
     required this.onCall,
+    required this.onSms,
   });
 
   final int secondsLeft;
   final int totalSeconds;
   final bool escalated;
   final int tick;
+  final BandProfile band;
+  final bool smsSent;
   final VoidCallback onAcknowledge;
   final VoidCallback onLogAction;
   final VoidCallback onCall;
+  final VoidCallback onSms;
 
   @override
   Widget build(BuildContext context) {
@@ -126,9 +145,9 @@ class _ExcursionCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    excursionTitle,
-                    style: TextStyle(
+                  Text(
+                    band.excursionTitle,
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
                       height: 1.25,
@@ -201,6 +220,14 @@ class _ExcursionCard extends StatelessWidget {
                     onPressed: onCall,
                     icon: const Icon(Icons.phone_outlined, size: 18),
                     label: const Text(callControlRoomLabel),
+                  ),
+                  TextButton.icon(
+                    onPressed: smsSent ? null : onSms,
+                    icon: Icon(
+                      smsSent ? Icons.check : Icons.sms_outlined,
+                      size: 18,
+                    ),
+                    label: Text(smsSent ? smsSentLabel : smsControlRoomLabel),
                   ),
                 ],
               ),

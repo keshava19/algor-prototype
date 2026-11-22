@@ -19,6 +19,18 @@ String formatWatermark(({double lat, double lng}) position, int tick) =>
     '${formatCoordinate(position.lat, position.lng)} · '
     '${formatDateTime(tick)} IST · $vehiclePlate';
 
+String formatFeedLabel({
+  required int lastFeedTick,
+  required int nowTick,
+  required bool stale,
+  bool finalRecord = false,
+}) {
+  final clock = formatClock(lastFeedTick);
+  if (finalRecord) return 'Logger $loggerId · final record $clock IST';
+  if (!stale) return 'Logger $loggerId · updated $clock IST';
+  return 'Stale · last received $clock IST · ${nowTick - lastFeedTick} min ago';
+}
+
 String formatRemaining(int tick) {
   final remaining = etaTick - tick;
   if (remaining <= 0) return 'Arriving';

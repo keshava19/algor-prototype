@@ -11,7 +11,10 @@ throughout.
    fallback grid.
 2. Set screen brightness to maximum, font scale to default, and enable Do Not Disturb.
 3. Long-press the footer to open **Demo controls**. Keep the escalation countdown at **2:00**
-   for a live walkthrough, or switch to **0:30** to show escalation inside a short clip.
+   for a live walkthrough, or switch to **0:30** to show escalation inside a short clip. The
+   tray also previews the **product band** (vaccine, blood, CRT, frozen), the **telemetry gap**
+   and a one-shot **Fail next sync**; all three are preview controls and never rewrite captured
+   records.
 4. Leave the app on the **Driver & e-POD** screen before triggering the excursion — the alert
    overlay is driver-only by design.
 5. The scenario clock starts at **05:00** and advances one scenario minute per real second.
@@ -33,6 +36,24 @@ throughout.
 If the take runs long, replace the signature and delivery block with the tray's
 **Jump to delivered**, then open **Client QA view → Completed sample**; it renders the
 canonical run (excursion 06:25, ack 06:26, out for delivery 21:45, e-POD 21:48).
+
+## Optional v2 beats (30–60 s)
+
+- **Push origin (5 s).** Trigger the excursion while on the role picker or ops screen. The
+  simulated heads-up card ("ALGOR FIELD · EXCURSION ALERT") arrives above the app and
+  auto-dismisses; tapping it dismisses immediately. It never requests notification permission.
+- **Stale feed (10 s).** In the tray enable **Telemetry gap**, close it and show the readout:
+  "Stale · last received … · N min ago", with the map marker and chart frozen together while
+  the scenario clock keeps moving. Disable the gap to catch up.
+- **SMS fallback (5 s).** Trigger an excursion while **Offline (dead zone)** is on. Tap
+  **SMS control room**: the button becomes "SMS sent · GSM fallback" and a custody event is
+  logged, demonstrating the GSM path when data is weak.
+- **Failed sync + retry (12 s).** Offline, capture all three items and sign. Arm **Fail next
+  sync** in the tray, switch online: the next promotion turns red with an event ID. The e-POD
+  stays blocked; tap **Retry** in the capture queue, then let it sync and deliver.
+- **Product-band preview (10 s).** In the tray switch to **CRT 15–25** or **Frozen -30 to -20**.
+  The readout, band bar, chart, client detail and PDF re-anchor; the checklist keeps its
+  original captured readings. Switch back to **Vaccine 2–8** before the canonical take.
 
 ## 3-minute walkthrough
 
@@ -68,5 +89,6 @@ canonical run (excursion 06:25, ack 06:26, out for delivery 21:45, e-POD 21:48).
 ## Language guardrails
 
 Use "audit-trail-backed" and "supports GDP documentation". Never claim "CDSCO-compliant" or
-"tamper-proof", and never imply a live connection to Algor systems. The concept footer must
+"tamper-proof", never imply a live connection to Algor systems, and describe the app as
+"designed with DPDP obligations in mind" rather than DPDP-compliant. The concept footer must
 remain on screen and on every PDF page.

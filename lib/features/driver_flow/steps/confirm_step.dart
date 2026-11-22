@@ -17,6 +17,9 @@ class ConfirmStep extends ConsumerWidget {
     final theme = Theme.of(context);
     final delivered = state.phase == TripPhase.delivered;
     final signature = state.signature;
+    final failedCount = state.queue
+        .where((item) => item.status == QueueItemStatus.failed)
+        .length;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -84,17 +87,55 @@ class ConfirmStep extends ConsumerWidget {
                     label: 'Signed',
                     value: '${signature.name} · ${formatClock(signature.tick)}',
                   ),
+                if (signature?.deliveryNote != null)
+                  _MetaRow(
+                    label: 'Delivery note',
+                    value: signature!.deliveryNote!,
+                  ),
               ],
             ),
           ),
         ),
         const SizedBox(height: 12),
+        if (failedCount > 0) ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.danger.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: AppColors.danger.withValues(alpha: 0.5),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  size: 16,
+                  color: AppColors.danger,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '$failedCount item${failedCount == 1 ? '' : 's'} failed — '
+                    'retry to unlock the e-POD.',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
         Text('Capture queue', style: theme.textTheme.labelLarge),
         const SizedBox(height: 8),
         Card(
           child: Padding(
             padding: const EdgeInsets.all(14),
-            child: SyncQueueSheet(queue: state.queue),
+            child: SyncQueueSheet(
+              queue: state.queue,
+              onRetry: ref.read(scenarioControllerProvider.notifier).retryItem,
+            ),
           ),
         ),
         if (delivered) ...[

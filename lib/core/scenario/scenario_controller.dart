@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../domain/band.dart';
 import 'scenario_state.dart';
 
 final class ScenarioController extends Notifier<ScenarioState> {
@@ -34,10 +35,18 @@ final class ScenarioController extends Notifier<ScenarioState> {
 
   void confirmSeal(String number) => state = state.confirmSeal(number);
 
-  void captureSignature(Uint8List bytes, String name) =>
-      state = state.captureSignature(bytes, name);
+  void captureSignature(Uint8List bytes, String name, {String? deliveryNote}) =>
+      state = state.captureSignature(bytes, name, deliveryNote: deliveryNote);
 
   void setOffline(bool value) => state = state.setOffline(value);
+
+  void setBand(ProductBand value) => state = state.setBand(value);
+
+  void setTelemetryGap(bool value) => state = state.setTelemetryGap(value);
+
+  void armSyncFailure() => state = state.armSyncFailure();
+
+  void retryItem(String eventId) => state = state.retryItem(eventId);
 
   void startDrift() => state = state.startDrift();
 
@@ -49,6 +58,8 @@ final class ScenarioController extends Notifier<ScenarioState> {
   void callControlRoom() => state = state.callControlRoom();
 
   void recordCall(String title) => state = state.recordCall(title);
+
+  void smsControlRoom() => state = state.smsControlRoom();
 
   void setEscalationDuration(int seconds) =>
       state = state.setEscalationDuration(seconds);

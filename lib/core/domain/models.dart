@@ -2,13 +2,23 @@ import 'dart:typed_data';
 
 enum TripPhase { driving, excursionActive, excursionAcknowledged, delivered }
 
-enum QueueItemStatus { pending, syncing, synced }
+enum QueueItemStatus { pending, syncing, synced, failed }
 
-typedef CapturedSignature = ({Uint8List bytes, String name, int tick});
+typedef CapturedSignature = ({
+  Uint8List bytes,
+  String name,
+  int tick,
+  String? deliveryNote,
+});
 
 sealed class QueueItem {
-  const QueueItem({required this.status, required this.capturedTick});
+  const QueueItem({
+    required this.eventId,
+    required this.status,
+    required this.capturedTick,
+  });
 
+  final String eventId;
   final QueueItemStatus status;
   final int capturedTick;
 
@@ -18,36 +28,54 @@ sealed class QueueItem {
 }
 
 final class ChecklistQueued extends QueueItem {
-  const ChecklistQueued({required super.status, required super.capturedTick});
+  const ChecklistQueued({
+    required super.eventId,
+    required super.status,
+    required super.capturedTick,
+  });
 
   @override
   String get label => 'Pre-trip checklist';
 
   @override
-  QueueItem withStatus(QueueItemStatus status) =>
-      ChecklistQueued(status: status, capturedTick: capturedTick);
+  QueueItem withStatus(QueueItemStatus status) => ChecklistQueued(
+    eventId: eventId,
+    status: status,
+    capturedTick: capturedTick,
+  );
 }
 
 final class ScanQueued extends QueueItem {
-  const ScanQueued({required super.status, required super.capturedTick});
+  const ScanQueued({
+    required super.eventId,
+    required super.status,
+    required super.capturedTick,
+  });
 
   @override
   String get label => 'AWB scan';
 
   @override
   QueueItem withStatus(QueueItemStatus status) =>
-      ScanQueued(status: status, capturedTick: capturedTick);
+      ScanQueued(eventId: eventId, status: status, capturedTick: capturedTick);
 }
 
 final class SealPhotoQueued extends QueueItem {
-  const SealPhotoQueued({required super.status, required super.capturedTick});
+  const SealPhotoQueued({
+    required super.eventId,
+    required super.status,
+    required super.capturedTick,
+  });
 
   @override
   String get label => 'Seal photo';
 
   @override
-  QueueItem withStatus(QueueItemStatus status) =>
-      SealPhotoQueued(status: status, capturedTick: capturedTick);
+  QueueItem withStatus(QueueItemStatus status) => SealPhotoQueued(
+    eventId: eventId,
+    status: status,
+    capturedTick: capturedTick,
+  );
 }
 
 final class ChecklistEntry {
@@ -73,8 +101,14 @@ final class ChecklistEntry {
 }
 
 final class CustodyEvent {
-  const CustodyEvent({required this.title, required this.tick, this.detail});
+  const CustodyEvent({
+    required this.eventId,
+    required this.title,
+    required this.tick,
+    this.detail,
+  });
 
+  final String eventId;
   final String title;
   final int tick;
   final String? detail;
@@ -125,10 +159,12 @@ final class EPod {
     required this.sealNumber,
     required this.deliveredTick,
     this.signatureBytes,
+    this.deliveryNote,
   });
 
   final String consigneeName;
   final String sealNumber;
   final int deliveredTick;
   final Uint8List? signatureBytes;
+  final String? deliveryNote;
 }

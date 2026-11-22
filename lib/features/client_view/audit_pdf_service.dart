@@ -6,6 +6,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
+import '../../core/domain/band.dart';
 import '../../core/domain/fictional_data.dart';
 import '../../core/domain/models.dart';
 import '../../core/domain/temperature.dart';
@@ -30,7 +31,8 @@ Future<(pw.Font, pw.Font)> _loadFonts() => _fonts ??= () async {
 
 List<TempReading> fullTripReadings(ScenarioState state) => readingsBetween(
   0,
-  state.tick,
+  state.lastFeedTick,
+  band: state.bandProfile,
   driftFrom: state.driftStartedTick,
   acknowledgedAt: state.excursion?.acknowledgedTick,
   pinFromTick: state.phase == TripPhase.excursionActive
@@ -46,6 +48,7 @@ Future<void> shareAuditPdf(ScenarioState state) async {
 Future<Uint8List> buildAuditPdf(ScenarioState state) async {
   final (regular, bold) = await _loadFonts();
   final theme = pw.ThemeData.withFont(base: regular, bold: bold);
+  final band = state.bandProfile;
   final readings = fullTripReadings(state);
   final doc = pw.Document(theme: theme);
   final generatedAt = formatDateTime(state.tick);
@@ -85,7 +88,7 @@ Future<Uint8List> buildAuditPdf(ScenarioState state) async {
         _keyValueTable([
           ('AWB', awbNumber),
           ('Lane', laneLabel.replaceAll('→', '–')),
-          ('Product', productLabel),
+          ('Product', band.productLabel),
           ('Vehicle', vehiclePlate),
           ('Driver', driverName),
           ('Consignee', consigneeHub),
@@ -93,21 +96,22 @@ Future<Uint8List> buildAuditPdf(ScenarioState state) async {
             'Seal',
             state.sealNumber.isEmpty ? defaultSealNumber : state.sealNumber,
           ),
-          ('Logger', '$loggerId · calibrated Oct 2026'),
+          ('Logger', '$loggerId · $loggerCalibration'),
           ('Status', _phaseLabel(state.phase)),
         ]),
         pw.SizedBox(height: 18),
         _sectionTitle('Temperature history — full trip'),
-        _statsRow(readings),
+        _statsRow(readings, band),
         pw.SizedBox(height: 10),
-        _curve(readings),
+        _curve(readings, band),
         pw.SizedBox(height: 4),
         pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
             pw.Text(
-              'Start ${formatClock(0)} · End ${formatClock(state.tick)} · '
-              'green band 2–8 °C',
+              'Start ${formatClock(0)} · End ${formatClock(state.lastFeedTick)}'
+              '${state.telemetryGap ? ' (last received)' : ''} · '
+              'green band ${band.rangeLabel} °C',
               style: pw.TextStyle(fontSize: 7.5, color: _grey),
             ),
             pw.Text(
@@ -298,12 +302,14 @@ pw.Widget _keyValue(String key, String value) => pw.Padding(
   ),
 );
 
-pw.Widget _statsRow(List<TempReading> readings) {
+pw.Widget _statsRow(List<TempReading> readings, BandProfile band) {
   final values = [for (final reading in readings) reading.celsius];
   final minTemp = values.reduce(min);
   final maxTemp = values.reduce(max);
   final mean = values.reduce((a, b) => a + b) / values.length;
-  final inBand = values.where((value) => value >= bandMin && value <= bandMax);
+  final inBand = values.where(
+    (value) => value >= band.min && value <= band.max,
+  );
   final percent = values.isEmpty ? 0.0 : inBand.length / values.length * 100;
   return pw.Row(
     children: [
@@ -345,7 +351,7 @@ pw.Widget _statsRow(List<TempReading> readings) {
   );
 }
 
-pw.Widget _curve(List<TempReading> readings) {
+pw.Widget _curve(List<TempReading> readings, BandProfile band) {
   final step = max(1, (readings.length / 240).ceil());
   final points = [
     for (var index = 0; index < readings.length; index += step) readings[index],
@@ -367,23 +373,33 @@ pw.Widget _curve(List<TempReading> readings) {
         final height = size.y;
         double xFor(int index) =>
             points.length == 1 ? 0 : index / (points.length - 1) * width;
-        double yFor(double celsius) => celsius / 10 * height;
+        double yFor(double celsius) =>
+            (celsius - band.axisMin) / band.axisSpan * height;
 
         canvas.setFillColor(PdfColor.fromInt(0xFFE7F8EE));
-        canvas.drawRect(0, yFor(bandMin), width, yFor(bandMax) - yFor(bandMin));
+        canvas.drawRect(
+          0,
+          yFor(band.min),
+          width,
+          yFor(band.max) - yFor(band.min),
+        );
         canvas.fillPath();
 
         canvas.setStrokeColor(PdfColors.grey400);
         canvas.setLineWidth(0.5);
-        for (var celsius = 0; celsius <= 10; celsius += 2) {
-          canvas.moveTo(0, yFor(celsius.toDouble()));
-          canvas.lineTo(width, yFor(celsius.toDouble()));
+        for (
+          var celsius = band.axisMin;
+          celsius <= band.axisMax;
+          celsius += band.axisInterval
+        ) {
+          canvas.moveTo(0, yFor(celsius));
+          canvas.lineTo(width, yFor(celsius));
         }
         canvas.strokePath();
 
         canvas.setStrokeColor(PdfColor.fromInt(0xFFB6C5D2));
         canvas.setLineWidth(0.7);
-        for (final celsius in [bandMin, bandMax]) {
+        for (final celsius in [band.min, band.max]) {
           canvas.moveTo(0, yFor(celsius));
           canvas.lineTo(width, yFor(celsius));
         }
@@ -400,7 +416,7 @@ pw.Widget _curve(List<TempReading> readings) {
         canvas.setFillColor(_danger);
         for (var index = 0; index < points.length; index++) {
           final reading = points[index];
-          if (reading.celsius > bandMax) {
+          if (reading.celsius > band.max || reading.celsius < band.min) {
             canvas.drawEllipse(xFor(index), yFor(reading.celsius), 2.2, 2.2);
             canvas.fillPath();
           }
@@ -414,13 +430,14 @@ pw.Widget _excursionTable(ScenarioState state) {
   final excursion = state.excursion;
   if (excursion == null) {
     return pw.Text(
-      'No excursion recorded. The shipment remained inside the 2–8 °C band.',
+      'No excursion recorded. The shipment remained inside the '
+      '${state.bandProfile.rangeLabel} °C band.',
       style: pw.TextStyle(fontSize: 9, color: _grey),
     );
   }
   return _keyValueTable([
     ('Detected', '${formatClock(excursion.startedTick)} IST'),
-    ('Reading', '${excursionTemp.toStringAsFixed(1)} °C'),
+    ('Reading', '${state.bandProfile.excursion.toStringAsFixed(1)} °C'),
     ('Location', excursion.location),
     (
       'Acknowledged',
@@ -464,9 +481,9 @@ pw.Widget _cell(String text, {bool grey = false}) => pw.Padding(
 );
 
 pw.Widget _captureTable(ScenarioState state) {
-  int? queueTick<T extends QueueItem>() {
+  QueueItem? queueItem<T extends QueueItem>() {
     for (final item in state.queue) {
-      if (item is T) return item.capturedTick;
+      if (item is T) return item;
     }
     return null;
   }
@@ -485,29 +502,50 @@ pw.Widget _captureTable(ScenarioState state) {
       ? stamp(confirmedTicks.reduce(min))
       : '${confirmedTicks.length} of ${state.checklist.length}';
 
-  final rows = <(String, String, String)>[
+  String checklistEventId() {
+    for (final event in state.custody) {
+      if (event.title == 'Pre-trip checklist confirmed') return event.eventId;
+    }
+    return '—';
+  }
+
+  String deliveryEventId() {
+    for (final event in state.custody.reversed) {
+      if (event.title.startsWith('Delivered')) return event.eventId;
+    }
+    return '—';
+  }
+
+  final scan = queueItem<ScanQueued>();
+  final seal = queueItem<SealPhotoQueued>();
+  final rows = <(String, String, String, String)>[
     (
       'Pre-trip checklist',
+      checklistEventId(),
       checklistDone ? checklistStamp : 'Incomplete',
       '${confirmedTicks.length} of ${state.checklist.length} rows confirmed',
     ),
     (
       'AWB scan',
-      stamp(queueTick<ScanQueued>()),
+      scan?.eventId ?? '—',
+      stamp(scan?.capturedTick),
       state.scanned ? awbNumber : 'Not scanned',
     ),
     (
       'Seal photo',
-      stamp(queueTick<SealPhotoQueued>()),
+      seal?.eventId ?? '—',
+      stamp(seal?.capturedTick),
       state.sealVerified ? 'Seal ${state.sealNumber}' : 'Not captured',
     ),
     (
       'Consignee signature',
+      '—',
       stamp(state.signature?.tick),
       state.signature?.name ?? 'Not captured',
     ),
     (
       'e-POD',
+      deliveryEventId(),
       stamp(state.epod?.deliveredTick),
       state.epod == null ? 'Not generated' : 'Sent for invoicing',
     ),
@@ -518,9 +556,10 @@ pw.Widget _captureTable(ScenarioState state) {
       horizontalInside: pw.BorderSide(color: PdfColors.grey300, width: 0.5),
     ),
     columnWidths: const {
-      0: pw.FlexColumnWidth(1.4),
-      1: pw.FixedColumnWidth(80),
-      2: pw.FlexColumnWidth(1.8),
+      0: pw.FlexColumnWidth(1.2),
+      1: pw.FixedColumnWidth(48),
+      2: pw.FixedColumnWidth(62),
+      3: pw.FlexColumnWidth(1.8),
     },
     children: [
       for (final row in rows)
@@ -529,6 +568,7 @@ pw.Widget _captureTable(ScenarioState state) {
             _cell(row.$1),
             _cell(row.$2, grey: true),
             _cell(row.$3, grey: true),
+            _cell(row.$4, grey: true),
           ],
         ),
     ],
@@ -574,6 +614,13 @@ pw.Widget _epodBlock(ScenarioState state) {
                 'Seal ${epod?.sealNumber ?? defaultSealNumber} verified at dispatch',
                 style: pw.TextStyle(fontSize: 8.5, color: _grey),
               ),
+              if (epod?.deliveryNote != null) ...[
+                pw.SizedBox(height: 3),
+                pw.Text(
+                  'Delivery note: ${epod!.deliveryNote}',
+                  style: pw.TextStyle(fontSize: 8.5, color: _grey),
+                ),
+              ],
             ],
           ),
         ),

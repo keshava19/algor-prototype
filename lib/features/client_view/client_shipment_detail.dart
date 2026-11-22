@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/domain/fictional_data.dart';
+import '../../core/domain/band.dart';
 import '../../core/domain/models.dart';
 import '../../core/domain/sample_assets.dart';
 import '../../core/domain/temperature.dart';
@@ -32,6 +33,7 @@ class ClientShipmentDetail extends ConsumerWidget {
           )
         : liveState;
     final theme = Theme.of(context);
+    final band = state.bandProfile;
     final fullSeries = fullTripReadings(state);
     final chartSeries = sample
         ? _downsample(fullSeries, 120)
@@ -72,34 +74,41 @@ class ClientShipmentDetail extends ConsumerWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '$laneLabel · $productLabel',
+                      '$laneLabel · ${band.productLabel}',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurface.withValues(
                           alpha: 0.6,
                         ),
                       ),
                     ),
-                    if (state.sealVerified) ...[
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.verified_outlined,
-                            size: 14,
+                    const SizedBox(height: 7),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 4,
+                      children: [
+                        if (state.sealVerified)
+                          _MetaBadge(
+                            icon: Icons.verified_outlined,
+                            text: 'Seal verified · ${state.sealNumber}',
                             color: AppColors.success,
                           ),
-                          const SizedBox(width: 5),
-                          Text(
-                            'Seal verified · ${state.sealNumber}',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.success,
-                            ),
+                        _MetaBadge(
+                          icon: Icons.science_outlined,
+                          text: '$loggerId · $loggerCalibration',
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.6,
                           ),
-                        ],
-                      ),
-                    ],
+                        ),
+                        if (!delivered)
+                          _MetaBadge(
+                            icon: Icons.schedule,
+                            text:
+                                'ETA ${formatClock(etaTick)} · '
+                                '${formatRemaining(state.tick)}',
+                            color: AppColors.cyan,
+                          ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -121,7 +130,7 @@ class ClientShipmentDetail extends ConsumerWidget {
                       const Spacer(),
                       Text(
                         sample
-                            ? '${formatClock(0)} – ${formatClock(state.tick)}'
+                            ? '${formatClock(0)} – ${formatClock(state.lastFeedTick)}'
                             : 'trailing 60 min',
                         style: TextStyle(
                           fontSize: 11,
@@ -135,15 +144,20 @@ class ClientShipmentDetail extends ConsumerWidget {
                   const SizedBox(height: 12),
                   TempReadout(
                     celsius: state.currentTemperature,
-                    bandMin: bandMin,
-                    bandMax: bandMax,
+                    band: band,
                     phase: state.phase,
+                    stale: state.telemetryGap && !delivered,
+                    sourceLabel: formatFeedLabel(
+                      lastFeedTick: state.lastFeedTick,
+                      nowTick: state.tick,
+                      stale: state.telemetryGap && !delivered,
+                      finalRecord: delivered,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   TempBandChart(
                     readings: chartSeries,
-                    bandMin: bandMin,
-                    bandMax: bandMax,
+                    band: band,
                     excursionTick: excursion?.startedTick,
                   ),
                   const SizedBox(height: 10),
@@ -164,7 +178,7 @@ class ClientShipmentDetail extends ConsumerWidget {
                       _Stat(
                         label: 'In band',
                         value:
-                            '${_inBandPercent(fullSeries).toStringAsFixed(1)}%',
+                            '${_inBandPercent(fullSeries, band).toStringAsFixed(1)}%',
                       ),
                       _Stat(
                         label: 'MKT',
@@ -351,6 +365,8 @@ class _EPodCard extends StatelessWidget {
             _InfoRow(label: 'Received by', value: epod.consigneeName),
             _InfoRow(label: 'Location', value: consigneeHub),
             _InfoRow(label: 'Seal', value: epod.sealNumber),
+            if (epod.deliveryNote != null)
+              _InfoRow(label: 'Delivery note', value: epod.deliveryNote!),
             if (signature != null) ...[
               const SizedBox(height: 10),
               Container(
@@ -400,6 +416,35 @@ class _InfoRow extends StatelessWidget {
       ),
     );
   }
+}
+
+class _MetaBadge extends StatelessWidget {
+  const _MetaBadge({
+    required this.icon,
+    required this.text,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String text;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(icon, size: 13, color: color),
+      const SizedBox(width: 4),
+      Text(
+        text,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+          color: color,
+        ),
+      ),
+    ],
+  );
 }
 
 class _Stat extends StatelessWidget {
@@ -477,10 +522,10 @@ class _AuditPdfButtonState extends State<_AuditPdfButton> {
   }
 }
 
-double _inBandPercent(List<TempReading> readings) {
+double _inBandPercent(List<TempReading> readings, BandProfile band) {
   if (readings.isEmpty) return 0;
   final inBand = readings.where(
-    (reading) => reading.celsius >= bandMin && reading.celsius <= bandMax,
+    (reading) => reading.celsius >= band.min && reading.celsius <= band.max,
   );
   return inBand.length / readings.length * 100;
 }

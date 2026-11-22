@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:algor_field/core/domain/band.dart';
 import 'package:algor_field/core/domain/sample_assets.dart';
 import 'package:algor_field/core/scenario/scenario_state.dart';
 import 'package:algor_field/features/client_view/audit_pdf_service.dart';
@@ -7,7 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('audit PDF builds for delivered and in-flight states', (
+  testWidgets('audit PDF builds for delivered, in-flight and preview states', (
     tester,
   ) async {
     final signature = await rootBundle.load(
@@ -21,10 +22,20 @@ void main() {
     final inFlight = await buildAuditPdf(
       ScenarioState.initial().triggerExcursion().nextTick(),
     );
+    final crt = await buildAuditPdf(
+      ScenarioState.initial()
+          .setBand(ProductBand.crt)
+          .triggerExcursion()
+          .nextTick(),
+    );
+    final stale = await buildAuditPdf(
+      ScenarioState.initial().setTelemetryGap(true).nextTick().nextTick(),
+    );
 
-    expect(ascii.decode(delivered.take(4).toList()), '%PDF');
-    expect(ascii.decode(inFlight.take(4).toList()), '%PDF');
+    for (final pdf in [delivered, inFlight, crt, stale]) {
+      expect(ascii.decode(pdf.take(4).toList()), '%PDF');
+      expect(pdf.length, greaterThan(10000));
+    }
     expect(delivered.length, greaterThan(20000));
-    expect(inFlight.length, greaterThan(10000));
   });
 }

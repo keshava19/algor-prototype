@@ -30,35 +30,58 @@ enum TripPhase { driving, excursionActive, excursionAcknowledged, delivered }
 | driving / excursionAcknowledged | auto e-POD rule (signature + online + all 3 captures synced) | — | delivered |
 | any | `reset()` | — | initial (role picker) |
 
-`nextTick()` order: freeze when delivered → tick+1 → sync one queue promotion when online →
-decrement escalation when excursionActive (expiry sets `escalated`) → evaluate auto e-POD rule.
+`nextTick()` order: freeze when delivered → tick+1 (or `lastFeedTick` stays frozen
+during a telemetry gap) → sync one queue promotion when online (pending→syncing→synced, or
+pending→failed when the one-shot failure control is armed) → decrement escalation when
+excursionActive (expiry sets `escalated`) → evaluate auto e-POD rule.
 
-Initial state: tick 45 (05:00), phase driving, custody `[Dispatched · 04:15 · Mumbai (BOM)]`.
+Initial state: tick 45 (05:00), lastFeedTick 45, phase driving, vaccine band, custody
+`[Dispatched · 04:15 · Mumbai (BOM)]`.
 
 ## Scenario state fields
 
-`tick`, `phase`, `checklist` (4 confirmed flags), `scanned`, `sealNumber`,
-`sealVerified`, `signature` (record: bytes/name/tick), `isOffline`, `queue` (sealed
-`ChecklistQueued | ScanQueued | SealPhotoQueued`), `epod`, `excursion`, `escalationSecondsLeft`,
-`escalationDuration`, `driftStartedTick`, `custody`.
+`tick`, `lastFeedTick`, `telemetryGap`, `phase`, `band`, `checklist` (4 confirmed flags),
+`scanned`, `sealNumber`, `sealVerified`, `signature` (record: bytes/name/tick/note), `isOffline`,
+`queue` (sealed `ChecklistQueued | ScanQueued | SealPhotoQueued`, each with `eventId`),
+`failNextSync`, `epod`, `excursion`, `escalationSecondsLeft`, `escalationDuration`,
+`driftStartedTick`, `custody` (each event with `eventId`), `eventSeq`.
 
-Capture commands append queue items; each capture appends a custody event.
-Queue promotions: one item one step per tick while online.
+Capture commands append a queue item and a custody event sharing one event ID; each capture
+gets a unique `EVT-NNN`. Queue promotions: one item one step per tick while online; a failed
+item offers Retry and blocks delivery until synced.
+
+## Two clocks and one owner per fact
+
+`tick` is the app/scenario clock (escalation, ETA, custody stamps). `lastFeedTick` is the last
+received sensor packet; temperature, truck position, charts and PDF curves read it. The demo
+tray's **Telemetry gap** freezes `lastFeedTick` while `tick` continues, so every feed-derived
+view goes stale together and the readout says "Stale · last received HH:MM". Triggering an
+excursion refreshes the feed once; the two time jumps clear the gap. The driver evidence queue
+(offline toggle) is a separate channel from the sensor feed.
+
+## Product bands
+
+`BandProfile` (`vaccine 2–8`, `blood 1–6`, `crt 15–25`, `frozen −30…−20`) owns the
+base/excursion/floor values, drift/decay rates, axis range/interval, product label and
+excursion title. The chart, readout bar and PDF painter all read the same profile. Switching
+bands from the demo tray previews the live feed and report band; captured records, checklist
+readings and timestamps are not rewritten. The canonical demo and the sample remain vaccine
+2–8.
 
 ## Temperature math
 
-`temperatureAt(tick, driftFrom, acknowledgedAt, pinFromTick)`: base 4.2 + seeded noise
-(seed 42, ±0.3) → while drifting add 0.35 × (tick − driftFrom) → from the excursion start
-onward the reading pins at 8.9 → after ack decay −0.8 × (tick − ackTick) toward 4.5, then
-noise only.
+`temperatureAt(tick, band, driftFrom, acknowledgedAt, pinFromTick)`: base + seeded noise
+(seed 42, ±0.3) → while drifting add `band.driftRate × (tick − driftFrom)` → from the excursion
+start onward the reading pins at `band.excursion` → after ack decay `band.decayRate` per tick
+toward `band.floor`, then noise only. Vaccine values reproduce the original dossier curve.
 `meanKineticTemperature(series)`: Arrhenius, Ea 83.144 kJ/mol, R 8.314462618.
 
 ## Providers
 
-```
-scenarioControllerProvider : NotifierProvider<ScenarioController, ScenarioState>
-truckPositionProvider      : Provider<({double lat, double lng})>
-chartReadingsProvider      : Provider<List<TempReading>>   (trailing 60)
+```dart
+final scenarioControllerProvider = NotifierProvider<ScenarioController, ScenarioState>(...);
+final truckPositionProvider = Provider<({double lat, double lng})>(... lastFeedTick);
+final chartReadingsProvider = Provider<List<TempReading>>(... trailing 60 to lastFeedTick, band);
 ```
 
 Controller: `build()` returns `ScenarioState.initial()`, starts a 1 Hz timer when
@@ -68,23 +91,27 @@ Controller: `build()` returns `ScenarioState.initial()`, starts a 1 Hz timer whe
 
 `/` role picker · `/ops` monitor · `/driver` stepper · `/client` list · `/client/live` ·
 `/client/sample`. All routes live under one `ShellRoute`; the shell is
-`Scaffold(body: Stack(routeChild, ExcursionOverlay), bottomNavigationBar: ConceptFooter)`.
-Footer long-press opens the demo tray. Every app bar has a home icon returning to `/`.
+`Scaffold(body: Stack(routeChild, ExcursionOverlay, ExcursionPushBanner),
+bottomNavigationBar: ConceptFooter)`. The push banner fires on the
+driving→excursionActive transition (suppressed on `/client/sample`), auto-dismisses after
+5 s and is dismiss-only. Footer long-press opens the demo tray. Every non-root app bar has a
+home icon returning to `/`.
 
 ## Shared widget contracts
 
 | Widget | Parameters | Notes |
 | --- | --- | --- |
-| `TempBandChart` | readings, bandMin, bandMax, excursionTick, height | fixed 0–10 Y-axis, band via range annotation |
+| `TempBandChart` | readings, band, excursionTick, height | band-relative fixed axis, band via range annotation |
 | `MapPanel` | truckPosition, isExcursion, height | OSM tiles, attribution, fallback grid on tile failure |
-| `TempReadout` | celsius, bandMin, bandMax, phase | 36 px w600 value, band bar, status chip |
+| `TempReadout` | celsius, band, phase, sourceLabel, stale | 36 px w600 value, band bar, status chip, feed/stale row |
 | `CountdownRing` | secondsLeft, totalSeconds, size | arc painter, mm:ss label |
 | `StatusChip` | phase | In transit / Excursion! / Excursion acknowledged / Delivered |
 | `MilestoneTimeline` | events | custody events, newest first |
-| `SyncQueueSheet` | queue | per-item status rows |
+| `SyncQueueSheet` | queue, onRetry | event ID + per-item status; failed rows retry |
 | `CallSheet` | title, subtitle, custodyTitle | 2 s ringing → Connected, appends custody |
+| `ExcursionPushBanner` | enabled | simulated push card, 5 s auto-dismiss |
 | `ConceptFooter` | — | long-press opens demo tray |
-| `DemoTray` | — | sheet with D26 actions |
+| `DemoTray` | — | grouped sheet with D26 actions plus v2 controls |
 
 ## Theme
 
@@ -97,11 +124,12 @@ map captions and the footer, while the 36 px w600 temperature readout is the onl
 ## PDF
 
 `buildAuditPdf(ScenarioState) → Future<Uint8List>` with `pw.MultiPage`:
-header + shipment table; full-trip curve (≤ 240 points, shaded band, red excursion dot);
-min/max/mean/MKT/in-band strip; excursion summary (detected, location, ack time, reason,
-note, escalation); custody table; then a forced new page for e-POD (signature image),
-capture verification and report notes; per-page footer
-"Concept prepared for Algor — mock data only". Fonts:
+header + shipment table (band product label, logger calibration); full-trip curve ending at
+`lastFeedTick` (≤ 240 points, band-relative axis, shaded band, red excursion dots);
+min/max/mean/MKT/in-band strip; excursion summary (detected, reading, location, ack time,
+reason, note, escalation, delivery note); custody table; then a forced new page for e-POD
+(signature image, delivery note), capture verification with event IDs and report notes;
+per-page footer "Concept prepared for Algor — mock data only". Fonts:
 `assets/fonts/Roboto-Regular.ttf`, `Roboto-Bold.ttf`. Share via `Printing.sharePdf`
 with filename `algor-field-audit-172-45678901.pdf`. (D27 amended for the two-page layout)
 
@@ -109,8 +137,9 @@ with filename `algor-field-audit-172-45678901.pdf`. (D27 amended for the two-pag
 
 All transitions pure on `ScenarioState`. `ScenarioController(autoStartTicker: false)` in
 tests; `advanceTick()` drives time. Widget tests pump `ProviderScope` overrides and provide
-a `MaterialApp` wrapper. Smoke suite: `temperature_test.dart`, `scenario_state_test.dart`,
-`driver_flow_test.dart`, `audit_pdf_test.dart`.
+a `MaterialApp` wrapper. Smoke suite: `temperature_test.dart`, `band_test.dart`,
+`scenario_state_test.dart`, `driver_flow_test.dart`, `push_banner_test.dart`,
+`audit_pdf_test.dart`.
 
 ## Conventions (latest Flutter 3.47 / Dart 3.13)
 

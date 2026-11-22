@@ -1,14 +1,10 @@
 import 'dart:math';
 
+import 'band.dart';
 import 'models.dart';
 
 const _seed = 42;
 const _noiseAmplitude = 0.3;
-const _driftRate = 0.35;
-const _decayRate = 0.8;
-const _baseTemp = 4.2;
-const _excursionTemp = 8.9;
-const _floorTemp = 4.5;
 const _eOverR = 83144.0 / 8.314462618;
 
 final List<double> _noise = _buildNoise();
@@ -25,19 +21,20 @@ double _noiseAt(int tick) => _noise[tick % _noise.length];
 
 double temperatureAt(
   int tick, {
+  BandProfile band = BandProfiles.vaccine,
   int? driftFrom,
   int? acknowledgedAt,
   int? pinFromTick,
 }) {
-  final base = _baseTemp + _noiseAt(tick);
-  if (pinFromTick != null && tick >= pinFromTick) return _excursionTemp;
+  final base = band.base + _noiseAt(tick);
+  if (pinFromTick != null && tick >= pinFromTick) return band.excursion;
   if (acknowledgedAt != null && tick >= acknowledgedAt) {
-    final decayed = _excursionTemp - _decayRate * (tick - acknowledgedAt);
-    return decayed > _floorTemp ? decayed : base;
+    final decayed = band.excursion - band.decayRate * (tick - acknowledgedAt);
+    return decayed > band.floor ? decayed : base;
   }
   if (driftFrom != null && tick >= driftFrom) {
-    final drifted = base + _driftRate * (tick - driftFrom);
-    return drifted > _excursionTemp ? _excursionTemp : drifted;
+    final drifted = base + band.driftRate * (tick - driftFrom);
+    return drifted > band.excursion ? band.excursion : drifted;
   }
   return base;
 }
@@ -45,6 +42,7 @@ double temperatureAt(
 List<TempReading> readingsBetween(
   int from,
   int to, {
+  BandProfile band = BandProfiles.vaccine,
   int? driftFrom,
   int? acknowledgedAt,
   int? pinFromTick,
@@ -54,6 +52,7 @@ List<TempReading> readingsBetween(
       tick,
       temperatureAt(
         tick,
+        band: band,
         driftFrom: driftFrom,
         acknowledgedAt: acknowledgedAt,
         pinFromTick: pinFromTick,

@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import '../domain/band.dart';
 import '../domain/fictional_data.dart';
 import '../domain/models.dart';
 import '../domain/sample_assets.dart';
@@ -8,7 +9,10 @@ import '../domain/temperature.dart';
 final class ScenarioState {
   const ScenarioState({
     required this.tick,
+    required this.lastFeedTick,
+    required this.telemetryGap,
     required this.phase,
+    required this.band,
     required this.checklist,
     required this.scanned,
     required this.sealNumber,
@@ -16,17 +20,22 @@ final class ScenarioState {
     required this.signature,
     required this.isOffline,
     required this.queue,
+    required this.failNextSync,
     required this.epod,
     required this.excursion,
     required this.escalationSecondsLeft,
     required this.escalationDuration,
     required this.driftStartedTick,
     required this.custody,
+    required this.eventSeq,
   });
 
   factory ScenarioState.initial() => ScenarioState(
     tick: initialTick,
+    lastFeedTick: initialTick,
+    telemetryGap: false,
     phase: TripPhase.driving,
+    band: ProductBand.vaccine,
     checklist: defaultChecklist,
     scanned: false,
     sealNumber: '',
@@ -34,20 +43,30 @@ final class ScenarioState {
     signature: null,
     isOffline: false,
     queue: const [],
+    failNextSync: false,
     epod: null,
     excursion: null,
     escalationSecondsLeft: 0,
     escalationDuration: defaultEscalationSeconds,
     driftStartedTick: null,
     custody: const [
-      CustodyEvent(title: 'Dispatched', tick: 0, detail: 'Mumbai (BOM)'),
+      CustodyEvent(
+        eventId: 'EVT-001',
+        title: 'Dispatched',
+        tick: 0,
+        detail: 'Mumbai (BOM)',
+      ),
     ],
+    eventSeq: 1,
   );
 
   factory ScenarioState.sampleDelivered({Uint8List? signatureBytes}) =>
       ScenarioState(
         tick: deliveredTick,
+        lastFeedTick: deliveredTick,
+        telemetryGap: false,
         phase: TripPhase.delivered,
+        band: ProductBand.vaccine,
         checklist: [
           for (final item in defaultChecklist)
             item.copyWith(confirmed: true, confirmedTick: 8),
@@ -57,13 +76,31 @@ final class ScenarioState {
         sealVerified: true,
         signature: signatureBytes == null
             ? null
-            : (bytes: signatureBytes, name: consigneeName, tick: 1052),
+            : (
+                bytes: signatureBytes,
+                name: consigneeName,
+                tick: 1052,
+                deliveryNote: null,
+              ),
         isOffline: false,
         queue: const [
-          ChecklistQueued(status: QueueItemStatus.synced, capturedTick: 8),
-          ScanQueued(status: QueueItemStatus.synced, capturedTick: 10),
-          SealPhotoQueued(status: QueueItemStatus.synced, capturedTick: 12),
+          ChecklistQueued(
+            eventId: 'EVT-002',
+            status: QueueItemStatus.synced,
+            capturedTick: 8,
+          ),
+          ScanQueued(
+            eventId: 'EVT-003',
+            status: QueueItemStatus.synced,
+            capturedTick: 10,
+          ),
+          SealPhotoQueued(
+            eventId: 'EVT-004',
+            status: QueueItemStatus.synced,
+            capturedTick: 12,
+          ),
         ],
+        failNextSync: false,
         epod: EPod(
           consigneeName: consigneeName,
           sealNumber: defaultSealNumber,
@@ -80,10 +117,14 @@ final class ScenarioState {
         escalationDuration: defaultEscalationSeconds,
         driftStartedTick: 116,
         custody: canonicalCustody,
+        eventSeq: 8,
       );
 
   final int tick;
+  final int lastFeedTick;
+  final bool telemetryGap;
   final TripPhase phase;
+  final ProductBand band;
   final List<ChecklistEntry> checklist;
   final bool scanned;
   final String sealNumber;
@@ -91,15 +132,22 @@ final class ScenarioState {
   final CapturedSignature? signature;
   final bool isOffline;
   final List<QueueItem> queue;
+  final bool failNextSync;
   final EPod? epod;
   final ExcursionEvent? excursion;
   final int escalationSecondsLeft;
   final int escalationDuration;
   final int? driftStartedTick;
   final List<CustodyEvent> custody;
+  final int eventSeq;
+
+  BandProfile get bandProfile => BandProfiles.of(band);
+
+  int get staleMinutes => tick - lastFeedTick;
 
   double get currentTemperature => temperatureAt(
-    tick,
+    lastFeedTick,
+    band: bandProfile,
     driftFrom: driftStartedTick,
     acknowledgedAt: excursion?.acknowledgedTick,
     pinFromTick: phase == TripPhase.excursionActive
@@ -117,7 +165,10 @@ final class ScenarioState {
 
   ScenarioState copyWith({
     int? tick,
+    int? lastFeedTick,
+    bool? telemetryGap,
     TripPhase? phase,
+    ProductBand? band,
     List<ChecklistEntry>? checklist,
     bool? scanned,
     String? sealNumber,
@@ -125,16 +176,21 @@ final class ScenarioState {
     CapturedSignature? signature,
     bool? isOffline,
     List<QueueItem>? queue,
+    bool? failNextSync,
     EPod? epod,
     ExcursionEvent? excursion,
     int? escalationSecondsLeft,
     int? escalationDuration,
     int? driftStartedTick,
     List<CustodyEvent>? custody,
+    int? eventSeq,
     bool clearExcursion = false,
   }) => ScenarioState(
     tick: tick ?? this.tick,
+    lastFeedTick: lastFeedTick ?? this.lastFeedTick,
+    telemetryGap: telemetryGap ?? this.telemetryGap,
     phase: phase ?? this.phase,
+    band: band ?? this.band,
     checklist: checklist ?? this.checklist,
     scanned: scanned ?? this.scanned,
     sealNumber: sealNumber ?? this.sealNumber,
@@ -142,20 +198,41 @@ final class ScenarioState {
     signature: signature ?? this.signature,
     isOffline: isOffline ?? this.isOffline,
     queue: queue ?? this.queue,
+    failNextSync: failNextSync ?? this.failNextSync,
     epod: epod ?? this.epod,
     excursion: clearExcursion ? null : (excursion ?? this.excursion),
     escalationSecondsLeft: escalationSecondsLeft ?? this.escalationSecondsLeft,
     escalationDuration: escalationDuration ?? this.escalationDuration,
     driftStartedTick: driftStartedTick ?? this.driftStartedTick,
     custody: custody ?? this.custody,
+    eventSeq: eventSeq ?? this.eventSeq,
   );
 
   ScenarioState nextTick() {
     if (phase == TripPhase.delivered) return this;
-    return copyWith(tick: tick + 1)
-        ._syncStep()
-        ._escalationStep()
-        ._autoDeliver();
+    final next = tick + 1;
+    return copyWith(
+      tick: next,
+      lastFeedTick: telemetryGap ? lastFeedTick : next,
+    )._syncStep()._escalationStep()._autoDeliver();
+  }
+
+  String _nextEventId() => 'EVT-${(eventSeq + 1).toString().padLeft(3, '0')}';
+
+  ScenarioState _appendCustody(String title, {String? detail, int? atTick}) {
+    final id = _nextEventId();
+    return copyWith(
+      eventSeq: eventSeq + 1,
+      custody: [
+        ...custody,
+        CustodyEvent(
+          eventId: id,
+          title: title,
+          tick: atTick ?? tick,
+          detail: detail,
+        ),
+      ],
+    );
   }
 
   ScenarioState confirmChecklistRow(int index) {
@@ -174,55 +251,131 @@ final class ScenarioState {
     if (phase == TripPhase.delivered) return this;
     if (!checklist.every((item) => item.confirmed)) return this;
     if (queue.any((item) => item is ChecklistQueued)) return this;
+    final id = _nextEventId();
     return copyWith(
+      eventSeq: eventSeq + 1,
       queue: [
         ...queue,
-        ChecklistQueued(status: QueueItemStatus.pending, capturedTick: tick),
+        ChecklistQueued(
+          eventId: id,
+          status: QueueItemStatus.pending,
+          capturedTick: tick,
+        ),
       ],
       custody: [
         ...custody,
-        CustodyEvent(title: 'Pre-trip checklist confirmed', tick: tick),
+        CustodyEvent(
+          eventId: id,
+          title: 'Pre-trip checklist confirmed',
+          tick: tick,
+        ),
       ],
     );
   }
 
   ScenarioState confirmScan() {
     if (scanned || phase == TripPhase.delivered) return this;
+    final id = _nextEventId();
     return copyWith(
       scanned: true,
+      eventSeq: eventSeq + 1,
       queue: [
         ...queue,
-        ScanQueued(status: QueueItemStatus.pending, capturedTick: tick),
+        ScanQueued(
+          eventId: id,
+          status: QueueItemStatus.pending,
+          capturedTick: tick,
+        ),
       ],
       custody: [
         ...custody,
-        CustodyEvent(title: 'AWB scanned', tick: tick, detail: awbLabel),
+        CustodyEvent(
+          eventId: id,
+          title: 'AWB scanned',
+          tick: tick,
+          detail: awbLabel,
+        ),
       ],
     );
   }
 
   ScenarioState confirmSeal(String number) {
     if (sealVerified || phase == TripPhase.delivered) return this;
+    final id = _nextEventId();
     return copyWith(
       sealNumber: number,
       sealVerified: true,
+      eventSeq: eventSeq + 1,
       queue: [
         ...queue,
-        SealPhotoQueued(status: QueueItemStatus.pending, capturedTick: tick),
+        SealPhotoQueued(
+          eventId: id,
+          status: QueueItemStatus.pending,
+          capturedTick: tick,
+        ),
       ],
       custody: [
         ...custody,
-        CustodyEvent(title: 'Seal verified', tick: tick, detail: number),
+        CustodyEvent(
+          eventId: id,
+          title: 'Seal verified',
+          tick: tick,
+          detail: number,
+        ),
       ],
     );
   }
 
-  ScenarioState captureSignature(Uint8List bytes, String name) {
+  ScenarioState captureSignature(
+    Uint8List bytes,
+    String name, {
+    String? deliveryNote,
+  }) {
     if (bytes.isEmpty || phase == TripPhase.delivered) return this;
-    return copyWith(signature: (bytes: bytes, name: name, tick: tick));
+    final note = deliveryNote?.trim();
+    final hasNote = note != null && note.isNotEmpty;
+    final captured = (
+      bytes: bytes,
+      name: name,
+      tick: tick,
+      deliveryNote: hasNote ? note : null,
+    );
+    if (!hasNote) return copyWith(signature: captured);
+    final id = _nextEventId();
+    return copyWith(
+      signature: captured,
+      eventSeq: eventSeq + 1,
+      custody: [
+        ...custody,
+        CustodyEvent(
+          eventId: id,
+          title: 'Delivery note',
+          tick: tick,
+          detail: note,
+        ),
+      ],
+    );
   }
 
   ScenarioState setOffline(bool value) => copyWith(isOffline: value);
+
+  ScenarioState setBand(ProductBand value) => copyWith(band: value);
+
+  ScenarioState setTelemetryGap(bool value) =>
+      copyWith(telemetryGap: value, lastFeedTick: value ? lastFeedTick : tick);
+
+  ScenarioState armSyncFailure() => copyWith(failNextSync: true);
+
+  ScenarioState retryItem(String eventId) {
+    final index = queue.indexWhere(
+      (item) =>
+          item.eventId == eventId && item.status == QueueItemStatus.failed,
+    );
+    if (index < 0) return this;
+    final updated = [...queue];
+    updated[index] = updated[index].withStatus(QueueItemStatus.pending);
+    return copyWith(queue: updated);
+  }
 
   ScenarioState startDrift() {
     if (phase != TripPhase.driving || driftStartedTick != null) return this;
@@ -233,10 +386,13 @@ final class ScenarioState {
     if (phase != TripPhase.driving) return this;
     final jumpTick = tick < excursionJumpTick ? excursionJumpTick : tick;
     final driftFrom = driftStartedTick ?? (jumpTick > 14 ? jumpTick - 14 : 0);
+    final id = _nextEventId();
     return copyWith(
       tick: jumpTick,
+      lastFeedTick: jumpTick,
       phase: TripPhase.excursionActive,
       driftStartedTick: driftFrom,
+      eventSeq: eventSeq + 1,
       excursion: ExcursionEvent(
         startedTick: jumpTick,
         location: excursionLocation,
@@ -245,9 +401,11 @@ final class ScenarioState {
       custody: [
         ...custody,
         CustodyEvent(
+          eventId: id,
           title: 'Excursion detected',
           tick: jumpTick,
-          detail: '8.9 °C near Nashik hub',
+          detail:
+              '${bandProfile.excursion.toStringAsFixed(1)} °C near Nashik hub',
         ),
       ],
     );
@@ -259,8 +417,10 @@ final class ScenarioState {
   }) {
     if (phase != TripPhase.excursionActive) return this;
     final trimmedNote = note?.trim();
+    final id = _nextEventId();
     return copyWith(
       phase: TripPhase.excursionAcknowledged,
+      eventSeq: eventSeq + 1,
       excursion: excursion!.copyWith(
         reasonCode: reasonCode,
         note: trimmedNote == null || trimmedNote.isEmpty ? null : trimmedNote,
@@ -270,6 +430,7 @@ final class ScenarioState {
       custody: [
         ...custody,
         CustodyEvent(
+          eventId: id,
           title: 'Excursion acknowledged',
           tick: tick,
           detail: trimmedNote == null || trimmedNote.isEmpty
@@ -282,12 +443,11 @@ final class ScenarioState {
 
   ScenarioState callControlRoom() => recordCall('Control room called');
 
-  ScenarioState recordCall(String title) => copyWith(
-    custody: [
-      ...custody,
-      CustodyEvent(title: title, tick: tick, detail: controlRoomNote),
-    ],
-  );
+  ScenarioState recordCall(String title) =>
+      _appendCustody(title, detail: controlRoomNote);
+
+  ScenarioState smsControlRoom() =>
+      _appendCustody('Control room SMS sent', detail: smsControlRoomNote);
 
   ScenarioState setEscalationDuration(int seconds) {
     if (phase == TripPhase.excursionActive) return this;
@@ -301,11 +461,15 @@ final class ScenarioState {
       return this;
     }
     final jumpTick = tick < outForDeliveryTick ? outForDeliveryTick : tick;
+    final id = _nextEventId();
     return copyWith(
       tick: jumpTick,
+      lastFeedTick: jumpTick,
+      telemetryGap: false,
+      eventSeq: eventSeq + 1,
       custody: [
         ...custody,
-        CustodyEvent(title: 'Out for delivery', tick: jumpTick),
+        CustodyEvent(eventId: id, title: 'Out for delivery', tick: jumpTick),
       ],
     );
   }
@@ -334,6 +498,12 @@ final class ScenarioState {
     );
     if (pendingIndex >= 0) {
       final updated = [...queue];
+      if (failNextSync) {
+        updated[pendingIndex] = updated[pendingIndex].withStatus(
+          QueueItemStatus.failed,
+        );
+        return copyWith(queue: updated, failNextSync: false);
+      }
       updated[pendingIndex] = updated[pendingIndex].withStatus(
         QueueItemStatus.syncing,
       );
@@ -353,27 +523,27 @@ final class ScenarioState {
     return copyWith(
       escalationSecondsLeft: 0,
       excursion: excursion!.copyWith(escalated: true),
-      custody: [
-        ...custody,
-        CustodyEvent(title: 'Escalated — control room notified', tick: tick),
-      ],
-    );
+    )._appendCustody('Escalated — control room notified');
   }
 
   ScenarioState _autoDeliver() {
     if (phase == TripPhase.delivered) return this;
     if (!canDeliver) return this;
+    final id = _nextEventId();
     return copyWith(
       phase: TripPhase.delivered,
+      eventSeq: eventSeq + 1,
       epod: EPod(
         consigneeName: consigneeName,
         sealNumber: sealNumber,
         deliveredTick: tick,
         signatureBytes: signature!.bytes,
+        deliveryNote: signature!.deliveryNote,
       ),
       custody: [
         ...custody,
         CustodyEvent(
+          eventId: id,
           title: 'Delivered · e-POD generated · Sent for invoicing',
           tick: tick,
         ),
